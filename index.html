@@ -1665,7 +1665,7 @@ body {
       <li><strong>当天数据严禁清理</strong>，系统强制禁止</li>
       <li>建议定期导出数据作为备份</li>
       <li>清理浏览器缓存 / 无痕模式会导致数据丢失，请使用正常浏览器</li>
-      <li><strong>到期声音提醒：</strong>桌台到期时会有蜂鸣声提示（1声=到期，2声=超时），Android 手机会有振动（iOS 不支持振动）。每 30 秒重响一次直到处理，避免漏听。首次需点击页面后才能播放声音。</li>
+      <li><strong>到期声音提醒：</strong>桌台到期和超时用<strong>不同音色</strong>区分——到期是中频 2 声提示音（温和），超时是低频 3 声方波警报音（急促）。每 30 秒重响一次直到处理，避免漏听。Android 有振动（iOS 不支持）。首次需点击页面后才能播放声音。</li>
       <li><strong>静音开关：</strong>顶部铃铛按钮可切换静音/恢复，打烊或开会时可用。状态会自动保存。</li>
     </ul>
   </div>
@@ -1676,7 +1676,7 @@ body {
     <br>
     <p><strong>Q: 如何增加/减少桌台数量？</strong><br>A: 点击"添加桌台"按钮可以一张张增加；也可以在"批量设置"中直接设置总桌数。</p>
     <br>
-    <p><strong>Q: 到期了会怎样？</strong><br>A: 桌台颜色变红，顶部统计数字增加。蜂鸣声每 30 秒重响一次（1声=到期，2声=超时），直到续时或清桌。超时 10 分钟后桌台会脉冲闪烁。可点顶部铃铛按钮静音。</p>
+    <p><strong>Q: 到期了会怎样？</strong><br>A: 桌台颜色变红，顶部统计数字增加。<strong>到期</strong>响中频 2 声提示音（温和），<strong>超时</strong>响低频 3 声警报音（急促），听声就能分辨。每 30 秒重响直到处理。超时 10 分钟后桌台脉冲闪烁。可点顶部铃铛静音。</p>
     <br>
     <p><strong>Q: 新员工怎么登录？</strong><br>A: 在登录页底部输入操作员名字 + 注册密钥（向店长获取），点击"注册并登录"。</p>
     <br>
@@ -4057,20 +4057,21 @@ function checkAlerts() {
   }
 
   // 分别提醒：超时优先（更紧急），停1秒后再响到期
+  // 两种状态用不同音色，店员听声就能分辨
   if (overtimeTables.length > 0) {
-    playBeep(2);
+    playBeep('overtime');  // 超时：低频急促2声（警报感）
     safeVibrate([200, 100, 200]);
     // 如果同时有到期桌台，1.2秒后补响到期提醒
     if (expiredTables.length > 0) {
       setTimeout(() => {
         if (!isMuted) {
-          playBeep(1);
+          playBeep('expired');  // 到期：中频2声（提示感）
           safeVibrate(200);
         }
       }, 1200);
     }
   } else if (expiredTables.length > 0) {
-    playBeep(1);
+    playBeep('expired');
     safeVibrate(200);
   }
 }
@@ -4133,30 +4134,61 @@ function initAudio() {
   }
 }
 
-function playBeep(count) {
-  // 音频未就绪（尚未有用户手势）→ 静默跳过，避免每 5 秒刷屏报错
+// 播放提醒音 — 不同类型用不同音色，店员听声就能分辨紧急程度
+// type: 'expired'  = 到期（中频 880Hz，2声短促，提示感）
+//       'overtime' = 超时（低频 440Hz，3声急促 + 方波，警报感）
+// 兼容旧调用：playBeep(1) / playBeep(2) 仍可用（数字按次数响 880Hz 正弦波）
+function playBeep(type) {
+  // 音频未就绪（尚未有用户手势）→ 静默跳过
   if (!audioReady || !audioCtx) {
-    // 尝试懒初始化（playBeep 调用链可能来自用户手势，如点击开台）
     if (audioReady) initAudio();
     if (!audioCtx) return;
   }
   try {
-    // 移动端可能再次 suspended，每次播放前 resume
     if (audioCtx.state === 'suspended') {
       audioCtx.resume();
     }
-    for (let i = 0; i < count; i++) {
-      const startTime = audioCtx.currentTime + i * 0.3;
+
+    // 根据类型确定音色参数
+    let beepCount, freq, waveType, interval, duration, volume;
+    if (type === 'overtime') {
+      // 超时：低频 440Hz 方波，3声急促，警报感强
+      beepCount = 3;
+      freq = 440;
+      waveType = 'square';
+      interval = 0.15;   // 间隔更短，急促
+      duration = 0.12;   // 单声更短
+      volume = 0.25;     // 方波音量大时会刺耳，适当降低
+    } else if (type === 'expired') {
+      // 到期：中频 880Hz 正弦波，2声，提示感
+      beepCount = 2;
+      freq = 880;
+      waveType = 'sine';
+      interval = 0.25;
+      duration = 0.2;
+      volume = 0.3;
+    } else {
+      // 兼容旧调用：数字 type 表示响几次，880Hz 正弦波
+      beepCount = (typeof type === 'number') ? type : 1;
+      freq = 880;
+      waveType = 'sine';
+      interval = 0.3;
+      duration = 0.2;
+      volume = 0.3;
+    }
+
+    for (let i = 0; i < beepCount; i++) {
+      const startTime = audioCtx.currentTime + i * interval;
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
-      osc.frequency.value = 880;
-      osc.type = 'sine';
+      osc.frequency.value = freq;
+      osc.type = waveType;
       gain.gain.setValueAtTime(0, startTime);
-      gain.gain.linearRampToValueAtTime(0.3, startTime + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.2);
+      gain.gain.linearRampToValueAtTime(volume, startTime + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
       osc.connect(gain).connect(audioCtx.destination);
       osc.start(startTime);
-      osc.stop(startTime + 0.2);
+      osc.stop(startTime + duration);
     }
   } catch(e) {}
 }
