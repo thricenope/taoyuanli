@@ -1291,6 +1291,25 @@ body {
 }
 .user-logout:hover { background: var(--c-danger); color: white; }
 
+.mute-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--n-200);
+  background: white;
+  border-radius: var(--r-full);
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--dur-fast);
+  flex-shrink: 0;
+  line-height: 1;
+}
+.mute-btn:active { transform: scale(0.95); }
+.mute-btn.muted { background: var(--n-100); border-color: var(--n-300); opacity: 0.6; }
+.mute-btn:hover { border-color: var(--c-primary); }
+
 </style>
 </head>
 <body>
@@ -1363,10 +1382,13 @@ body {
       <span>陶源里桌台管家</span>
     </div>
     <div class="stats-strip" id="statsStrip"></div>
-    <div class="user-bar" id="userBar" onclick="openSwitchModal()" style="display:none;">
-      <div class="user-avatar" id="userAvatar">F</div>
-      <span class="user-name" id="userName">操作员</span>
-      <button class="user-logout" onclick="event.stopPropagation();logout()" title="登出">⏻</button>
+    <div style="display:flex;align-items:center;gap:var(--sp-2);flex-shrink:0;">
+      <button class="mute-btn" id="muteBtn" onclick="toggleMute()" title="静音开关">🔔</button>
+      <div class="user-bar" id="userBar" onclick="openSwitchModal()" style="display:none;">
+        <div class="user-avatar" id="userAvatar">F</div>
+        <span class="user-name" id="userName">操作员</span>
+        <button class="user-logout" onclick="event.stopPropagation();logout()" title="登出">⏻</button>
+      </div>
     </div>
   </div>
   <div class="tabbar" id="tabbar">
@@ -1643,7 +1665,8 @@ body {
       <li><strong>当天数据严禁清理</strong>，系统强制禁止</li>
       <li>建议定期导出数据作为备份</li>
       <li>清理浏览器缓存 / 无痕模式会导致数据丢失，请使用正常浏览器</li>
-      <li><strong>到期声音提醒：</strong>桌台到期时会有蜂鸣声提示（1声=到期，2声=超时），手机/平板会有振动。首次需点击页面后才能播放声音。</li>
+      <li><strong>到期声音提醒：</strong>桌台到期时会有蜂鸣声提示（1声=到期，2声=超时），Android 手机会有振动（iOS 不支持振动）。每 30 秒重响一次直到处理，避免漏听。首次需点击页面后才能播放声音。</li>
+      <li><strong>静音开关：</strong>顶部铃铛按钮可切换静音/恢复，打烊或开会时可用。状态会自动保存。</li>
     </ul>
   </div>
 
@@ -1653,7 +1676,7 @@ body {
     <br>
     <p><strong>Q: 如何增加/减少桌台数量？</strong><br>A: 点击"添加桌台"按钮可以一张张增加；也可以在"批量设置"中直接设置总桌数。</p>
     <br>
-    <p><strong>Q: 到期了会怎样？</strong><br>A: 桌台颜色变红，顶部统计数字增加。超时 10 分钟后桌台会脉冲闪烁提醒。可续时或清桌。</p>
+    <p><strong>Q: 到期了会怎样？</strong><br>A: 桌台颜色变红，顶部统计数字增加。蜂鸣声每 30 秒重响一次（1声=到期，2声=超时），直到续时或清桌。超时 10 分钟后桌台会脉冲闪烁。可点顶部铃铛按钮静音。</p>
     <br>
     <p><strong>Q: 新员工怎么登录？</strong><br>A: 在登录页底部输入操作员名字 + 注册密钥（向店长获取），点击"注册并登录"。</p>
     <br>
@@ -3974,46 +3997,117 @@ function autoSaveCheck() {
 console.log('陶源里桌台管家 v1.1 已启动');
 
 // ============================================
-// 到期提醒 — 音频 + 振动（首次到期时触发）
+// 到期提醒 — 音频 + 振动
 // ============================================
 // alertedTables 已在顶部全局变量区声明
+// lastAlertTime 记录每桌上次提醒时间，用于周期性重响（解决漏听问题）
+let lastAlertTime = {}; // { '1_expired': timestamp, '1_overtime': timestamp }
+const ALERT_RETRY_INTERVAL = 30000; // 30秒重响一次
+let isMuted = false; // 静音开关
 
 function checkAlerts() {
-  let hasExpired = false;
-  let hasOvertime = false;
+  // 静音时跳过所有提醒
+  if (isMuted) return;
+
+  const now = Date.now();
+  let expiredTables = [];  // 收集所有到期桌台
+  let overtimeTables = []; // 收集所有超时桌台
 
   for (const id in tables) {
     const t = tables[id];
     if (t.status === 'idle') {
       alertedTables.delete(id);
+      delete lastAlertTime[id + '_expired'];
+      delete lastAlertTime[id + '_overtime'];
       continue;
     }
     // 全天桌台不触发到期提醒
     if (t.isFullDay) continue;
     const state = getTableState(t);
-    if (state === 'expired' && !alertedTables.has(id + '_expired')) {
-      alertedTables.add(id + '_expired');
-      hasExpired = true;
+
+    // 到期：首次触发或超过30秒重响
+    if (state === 'expired') {
+      const key = id + '_expired';
+      const lastTime = lastAlertTime[key] || 0;
+      if (now - lastTime >= ALERT_RETRY_INTERVAL) {
+        expiredTables.push(t);
+        lastAlertTime[key] = now;
+        alertedTables.add(key);
+      }
     }
-    if (state === 'overtime' && !alertedTables.has(id + '_overtime')) {
-      alertedTables.add(id + '_overtime');
-      hasOvertime = true;
+
+    // 超时：首次触发或超过30秒重响
+    if (state === 'overtime') {
+      const key = id + '_overtime';
+      const lastTime = lastAlertTime[key] || 0;
+      if (now - lastTime >= ALERT_RETRY_INTERVAL) {
+        overtimeTables.push(t);
+        lastAlertTime[key] = now;
+        alertedTables.add(key);
+      }
     }
+
     // 如果回到正常状态，清除标记
     if (state === 'active' || state === 'warn') {
       alertedTables.delete(id + '_expired');
       alertedTables.delete(id + '_overtime');
+      delete lastAlertTime[id + '_expired'];
+      delete lastAlertTime[id + '_overtime'];
     }
   }
 
-  if (hasOvertime) {
-    playBeep(2); // 超时：连续2声
+  // 分别提醒：超时优先（更紧急），停1秒后再响到期
+  if (overtimeTables.length > 0) {
+    playBeep(2);
     safeVibrate([200, 100, 200]);
-  } else if (hasExpired) {
-    playBeep(1); // 到期：1声
+    // 如果同时有到期桌台，1.2秒后补响到期提醒
+    if (expiredTables.length > 0) {
+      setTimeout(() => {
+        if (!isMuted) {
+          playBeep(1);
+          safeVibrate(200);
+        }
+      }, 1200);
+    }
+  } else if (expiredTables.length > 0) {
+    playBeep(1);
     safeVibrate(200);
   }
 }
+
+// 静音开关
+function toggleMute() {
+  isMuted = !isMuted;
+  const btn = document.getElementById('muteBtn');
+  if (isMuted) {
+    btn.textContent = '🔕';
+    btn.classList.add('muted');
+    btn.title = '已静音（点击恢复）';
+  } else {
+    btn.textContent = '🔔';
+    btn.classList.remove('muted');
+    btn.title = '已开启（点击静音）';
+    // 取消静音后立即检查一次
+    checkAlerts();
+  }
+  // 持久化到 localStorage
+  try {
+    localStorage.setItem('pindou_muted', isMuted ? '1' : '0');
+  } catch(e) {}
+  showToast(isMuted ? '已静音，提醒将不再发声' : '已恢复提醒', isMuted ? '' : 'success');
+}
+
+// 页面回到前台时立即补查（解决 iOS 锁屏后延迟问题）
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    // 回到前台：清空重响计时，强制立即检查
+    lastAlertTime = {};
+    // 延迟200ms让 AudioContext 有时间 resume
+    setTimeout(() => {
+      if (!isMuted) checkAlerts();
+    }, 200);
+  }
+});
 
 // 生成蜂鸣声
 // audioCtx 已在顶部全局变量区声明
@@ -4094,6 +4188,19 @@ document.addEventListener('touchstart', _markAudioReady, true);
 document.addEventListener('keydown', _markAudioReady, true);
 
 setInterval(checkAlerts, 5000); // 每5秒检查提醒
+
+// 启动时恢复静音状态
+try {
+  if (localStorage.getItem('pindou_muted') === '1') {
+    isMuted = true;
+    const btn = document.getElementById('muteBtn');
+    if (btn) {
+      btn.textContent = '🔕';
+      btn.classList.add('muted');
+      btn.title = '已静音（点击恢复）';
+    }
+  }
+} catch(e) {}
 </script>
 
 </body>
