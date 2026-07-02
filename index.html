@@ -1799,14 +1799,6 @@ function autoBackup(action) {
   }
 }
 
-function hasBackup() {
-  try {
-    return !!localStorage.getItem(BACKUP_KEY);
-  } catch(e) {
-    return false;
-  }
-}
-
 function getBackupInfo() {
   try {
     const time = localStorage.getItem(BACKUP_TIME_KEY);
@@ -1888,20 +1880,21 @@ function restoreFromBackupConfirm() {
 }
 
 // ============================================
-// 密钥系统 — 简单哈希校验（防止明文暴露在源码中）
-// 密钥请向店长索取，勿写入源码注释
+// 密钥系统 — 简单哈希校验
+// 哈希值已硬编码，源码中不含明文密钥
+// 密钥请向店长索取
 // ============================================
 function simpleHash(str) {
   let h = 5381;
   for (let i = 0; i < str.length; i++) {
     h = ((h << 5) + h) + str.charCodeAt(i);
-    h = h >>> 0; // 无符号右移，确保返回非负整数（避免 & 0xffffffff 的有符号问题）
+    h = h >>> 0; // 无符号右移，确保返回非负整数
   }
   return h;
 }
-// guan1234 的哈希值（非明文，打开源码看不到原始密码）
-const REG_KEY_HASH = simpleHash('guan1234');
-const ADMIN_KEY_HASH = simpleHash('guan1234');
+// 密钥哈希值（非明文，F12 看不到原始密码）
+const REG_KEY_HASH = 2729728826;
+const ADMIN_KEY_HASH = 2729728826;
 
 function verifyRegKey(key) {
   return simpleHash(key) === REG_KEY_HASH;
@@ -2034,6 +2027,7 @@ let selectedFullDay = false;
 let currentFilter = { status: 'all', duration: 'all' };
 let currentUser = null; // 当前登录操作员
 let audioCtx = null; // 音频上下文（提前声明，避免 TDZ）
+let visibleTableCount = 50; // 桌台总览分页：当前显示数量
 let audioReady = false; // 是否已获得用户手势（Chrome 自动播放策略要求）
 let alertedTables = new Set(); // 记录已提醒过的桌台（提前声明，避免 TDZ）
 
@@ -2630,8 +2624,33 @@ function renderTables() {
     return;
   }
 
-  grid.innerHTML = ids.map(id => renderTableCard(tables[id])).join('');
-  document.getElementById('tablesTitle').textContent = `桌台总览（共 ${ids.length} 桌）`;
+  // 分页渲染：只渲染前 visibleTableCount 个，避免大量桌台卡顿
+  const visibleIds = ids.slice(0, visibleTableCount);
+  let html = visibleIds.map(id => renderTableCard(tables[id])).join('');
+
+  // 如果还有更多，加"加载更多"按钮
+  if (ids.length > visibleTableCount) {
+    const remaining = ids.length - visibleTableCount;
+    html += `<div style="grid-column:1/-1;text-align:center;padding:var(--sp-5) var(--sp-3);">
+      <button class="btn btn-secondary" onclick="loadMoreTables()" style="min-width:200px;">加载更多（剩余 ${remaining} 桌）</button>
+    </div>`;
+  }
+
+  grid.innerHTML = html;
+  document.getElementById('tablesTitle').textContent = `桌台总览（共 ${ids.length} 桌${ids.length > visibleTableCount ? `，已加载 ${visibleTableCount}` : ''}）`;
+}
+
+function loadMoreTables() {
+  visibleTableCount += 50;
+  renderTables();
+  // 滚动到新加载区域
+  setTimeout(() => {
+    const grid = document.getElementById('tableGrid');
+    const loadMoreBtn = grid.querySelector('button[onclick="loadMoreTables()"]');
+    if (loadMoreBtn) {
+      loadMoreBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, 100);
 }
 
 function addOneTable() {
@@ -3843,7 +3862,7 @@ function switchPage(pageName) {
   document.querySelector(`.tab[data-page="${pageName}"]`).classList.add('active');
   document.getElementById(`page-${pageName}`).classList.add('active');
 
-  if (pageName === 'tables') { renderTables(); }
+  if (pageName === 'tables') { visibleTableCount = 50; renderTables(); }
   if (pageName === 'filter') renderFilterGrid();
   if (pageName === 'charts') renderCharts();
   if (pageName === 'logs') renderLogs();
@@ -4006,7 +4025,6 @@ const ALERT_RETRY_INTERVAL = 30000; // 30秒重响一次
 let isMuted = false; // 静音开关
 
 function checkAlerts() {
-  // 静音时跳过所有提醒
   if (isMuted) return;
 
   const now = Date.now();
@@ -4163,7 +4181,7 @@ function playBeep(type) {
       waveType = 'square';
       interval = 0.15;   // 间隔更短，急促
       duration = 0.12;   // 单声更短
-      volume = 0.25;     // 方波音量大时会刺耳，适当降低
+      volume = 0.6;      // 方波音量调大，确保门店环境能听到
     } else if (type === 'expired') {
       // 到期：中频 880Hz 正弦波，2声，提示感
       beepCount = 2;
@@ -4171,7 +4189,7 @@ function playBeep(type) {
       waveType = 'sine';
       interval = 0.25;
       duration = 0.2;
-      volume = 0.3;
+      volume = 0.7;      // 正弦波音量调大，清晰可闻
     } else {
       // 兼容旧调用：数字 type 表示响几次，880Hz 正弦波
       beepCount = (typeof type === 'number') ? type : 1;
@@ -4179,7 +4197,7 @@ function playBeep(type) {
       waveType = 'sine';
       interval = 0.3;
       duration = 0.2;
-      volume = 0.3;
+      volume = 0.7;
     }
 
     for (let i = 0; i < beepCount; i++) {
