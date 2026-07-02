@@ -4122,7 +4122,8 @@ function initAudio() {
   // 还没有任何用户手势 → 暂不创建，等首次手势触发
   if (!audioReady) return;
   try {
-    if (!audioCtx) {
+    // AudioContext 可能被系统省电策略关闭（closed 状态），需要重建
+    if (!audioCtx || audioCtx.state === 'closed') {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
     // iOS/Android: suspended 状态需要 resume（必须在用户手势中调用才有效）
@@ -4145,6 +4146,10 @@ function playBeep(type) {
     if (!audioCtx) return;
   }
   try {
+    // AudioContext 被系统关闭后需要重建（长时间运行或后台返回后）
+    if (audioCtx.state === 'closed') {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
     if (audioCtx.state === 'suspended') {
       audioCtx.resume();
     }
