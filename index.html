@@ -1435,7 +1435,7 @@ body {
   </div>
 
   <div class="field">
-    <label class="field-label">按时长</label>
+    <label class="field-label">按时长 <span style="font-size:0.75rem;color:var(--n-400);font-weight:400;">（向下取整，如1.5h归入1h）</span></label>
     <div class="filter-pills" id="filterDuration">
       <button class="pill active" data-filter="duration" data-val="all">全部</button>
       <button class="pill" data-filter="duration" data-val="1">1h</button>
@@ -2570,7 +2570,7 @@ function jumpToFilter(filterData) {
 // ============================================
 // 格式化时长显示（如 1.5 → "1h30m"，0.5 → "30m"）
 function formatDuration(hours) {
-  if (hours === 0) return '0m';
+  if (!hours || hours <= 0) return '0m';
   const h = Math.floor(hours);
   const m = Math.round((hours - h) * 60);
   if (h > 0 && m > 0) return `${h}h${m}m`;
@@ -2672,13 +2672,23 @@ function addOneTable() {
   saveConfigData(config);
   saveTables(tables);
 
+  // 确保新桌台在分页可见范围内（否则添加后看不到）
+  if (nextNum > visibleTableCount) {
+    visibleTableCount = nextNum;
+  }
+
   renderAll();
   showToast(`已添加 ${nextNum} 号桌`, 'success');
 
-  // 自动滚动到底部
+  // 自动滚动到新桌台
   setTimeout(() => {
     const grid = document.getElementById('tableGrid');
-    grid.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const newCard = grid.querySelector(`.tcard[onclick="openActionModal('${id}')"]`);
+    if (newCard) {
+      newCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else {
+      grid.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   }, 100);
 }
 
