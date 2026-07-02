@@ -1,0 +1,4100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>陶源里桌台管家</title>
+<style>
+/* ============================================
+   设计系统 — OKLCH 色彩 · 暖灰中性 · 4pt 间距
+   ============================================ */
+:root {
+  /* 安全区 — iPhone 刘海/底部横条 / 平板边框 */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  /* 主品牌色 — 青花瓷蓝，陶源里陶艺风格 */
+  --c-primary: oklch(55% 0.15 250);
+  --c-primary-light: oklch(88% 0.06 250);
+  --c-primary-dark: oklch(38% 0.12 250);
+  --c-primary-bg: oklch(95% 0.03 250);
+
+  /* 中性色 — 冷灰偏蓝 */
+  --n-50:  oklch(98% 0.005 250);
+  --n-100: oklch(96% 0.008 250);
+  --n-200: oklch(92% 0.010 250);
+  --n-300: oklch(86% 0.012 250);
+  --n-400: oklch(72% 0.012 250);
+  --n-500: oklch(58% 0.012 250);
+  --n-600: oklch(45% 0.012 250);
+  --n-700: oklch(35% 0.010 250);
+  --n-800: oklch(25% 0.008 250);
+  --n-900: oklch(18% 0.006 250);
+
+  /* 语义色 — 桌台状态 */
+  --s-idle:    oklch(80% 0.01 35);   /* 空闲-灰 */
+  --s-idle-bg: oklch(94% 0.006 35);
+  --s-active:  oklch(60% 0.13 220);  /* 使用中-蓝 */
+  --s-active-bg: oklch(90% 0.05 220);
+  --s-warn:    oklch(72% 0.15 75);   /* 即将到期≤10min-黄 */
+  --s-warn-bg: oklch(92% 0.07 75);
+  --s-expired: oklch(62% 0.19 28);   /* 已到期-红 */
+  --s-expired-bg: oklch(90% 0.06 28);
+  --s-overtime: oklch(48% 0.20 28);  /* 超时>10min-深红 */
+  --s-overtime-bg: oklch(50% 0.14 28);
+
+  --c-success: oklch(60% 0.13 145);
+  --c-danger:  oklch(55% 0.18 28);
+  --c-info:    oklch(55% 0.12 240);
+
+  /* 间距 — 4pt 基准 */
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px;
+  --sp-4: 16px; --sp-5: 24px; --sp-6: 32px;
+  --sp-7: 48px; --sp-8: 64px;
+
+  /* 圆角 */
+  --r-sm: 6px; --r-md: 10px; --r-lg: 16px; --r-xl: 24px; --r-full: 999px;
+
+  /* 阴影 */
+  --sh-sm: 0 1px 2px oklch(20% 0.01 250 / 0.06);
+  --sh-md: 0 2px 8px oklch(20% 0.01 250 / 0.08), 0 1px 2px oklch(20% 0.01 250 / 0.04);
+  --sh-lg: 0 8px 24px oklch(20% 0.01 250 / 0.12);
+
+  /* 动效 */
+  --ease-out: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 120ms;
+  --dur-mid: 250ms;
+  --dur-slow: 400ms;
+
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+*:focus { outline: none; }
+*:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 2px;
+}
+
+html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+body {
+  font-family: var(--font);
+  background: var(--n-50);
+  color: var(--n-800);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  touch-action: manipulation;
+}
+
+/* 数字等宽 */
+.numeric {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* ============================================
+   顶部导航
+   ============================================ */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--n-50);
+  border-bottom: 1px solid var(--n-200);
+  display: flex;
+  flex-direction: column;
+  padding-top: var(--safe-top);
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
+}
+
+.topbar-main {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-3) var(--sp-5);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--c-primary-dark);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+.logo-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: var(--r-full);
+  background: var(--c-primary);
+  box-shadow: 0 0 0 3px var(--c-primary-light);
+}
+
+.stats-strip {
+  display: flex;
+  gap: var(--sp-2);
+  flex: 1;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.stats-strip::-webkit-scrollbar { display: none; }
+
+.stat-chip {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-1) var(--sp-3);
+  background: white;
+  border: 1px solid var(--n-200);
+  border-radius: var(--r-full);
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  transition: background var(--dur-fast) var(--ease-out), transform var(--dur-fast);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.stat-chip:active { transform: scale(0.96); }
+.stat-chip .chip-dot {
+  width: 8px; height: 8px; border-radius: var(--r-full);
+}
+.stat-chip .chip-val {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.tabbar {
+  display: flex;
+  gap: 0;
+  padding: 0 var(--sp-5);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.tabbar::-webkit-scrollbar { display: none; }
+
+.tab {
+  padding: var(--sp-2) var(--sp-4);
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--n-500);
+  cursor: pointer;
+  position: relative;
+  transition: color var(--dur-fast);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.tab.active {
+  color: var(--c-primary-dark);
+  font-weight: 700;
+}
+.tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: var(--sp-4);
+  right: var(--sp-4);
+  height: 3px;
+  background: var(--c-primary);
+  border-radius: 3px 3px 0 0;
+}
+
+/* ============================================
+   页面容器
+   ============================================ */
+.page {
+  display: none;
+  padding: var(--sp-4) var(--sp-5) max(var(--sp-7), calc(var(--safe-bottom) + var(--sp-5)));
+  max-width: 1400px;
+  margin: 0 auto;
+  animation: pageIn var(--dur-mid) var(--ease-out);
+}
+.page.active { display: block; }
+
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================
+   桌台网格
+   ============================================ */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+  flex-wrap: wrap;
+}
+
+.toolbar-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--n-800);
+}
+
+.toolbar-spacer { flex: 1; }
+
+.filter-pills {
+  display: flex;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+
+.pill {
+  padding: var(--sp-1) var(--sp-3);
+  background: white;
+  border: 1px solid var(--n-200);
+  border-radius: var(--r-full);
+  font-size: 0.8125rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease-out);
+  color: var(--n-600);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+.pill.active {
+  background: var(--c-primary);
+  border-color: var(--c-primary);
+  color: white;
+  font-weight: 600;
+}
+.pill .pill-count {
+  background: oklch(20% 0.01 35 / 0.1);
+  padding: 0 6px;
+  border-radius: var(--r-full);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.pill.active .pill-count {
+  background: oklch(100% 0 0 / 0.25);
+}
+
+.table-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: var(--sp-3);
+  contain: layout; /* 隔离重排范围，减少闪烁 */
+}
+
+/* ============================================
+   桌台卡片
+   ============================================ */
+.tcard {
+  position: relative;
+  background: white;
+  border: 2px solid var(--n-200);
+  border-radius: var(--r-lg);
+  padding: var(--sp-3);
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-out), border-color var(--dur-fast);
+  user-select: none;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent; /* 移动端点击高亮 */
+  contain: layout style; /* 隔离重排重绘范围 */
+}
+.tcard:active { transform: scale(0.97); }
+
+/* 状态左边框 */
+.tcard::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+  background: var(--s-idle);
+  transition: background var(--dur-fast);
+}
+
+.tcard.idle { background: var(--s-idle-bg); border-color: var(--n-200); }
+.tcard.idle::before { background: var(--s-idle); }
+
+.tcard.active { background: var(--s-active-bg); border-color: var(--s-active); }
+.tcard.active::before { background: var(--s-active); }
+
+.tcard.warn { background: var(--s-warn-bg); border-color: var(--s-warn); }
+.tcard.warn::before { background: var(--s-warn); }
+
+.tcard.expired { background: var(--s-expired-bg); border-color: var(--s-expired); }
+.tcard.expired::before { background: var(--s-expired); }
+
+.tcard.overtime {
+  background: var(--s-overtime-bg);
+  border-color: var(--s-overtime);
+  animation: pulse 2s ease-in-out infinite;
+}
+.tcard.overtime::before { background: var(--s-overtime); }
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 oklch(48% 0.20 28 / 0.0); }
+  50% { box-shadow: 0 0 0 4px oklch(48% 0.20 28 / 0.15); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tcard.overtime { animation: none; }
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+.tcard-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: var(--sp-2);
+}
+
+.tcard-num {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--n-800);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.tcard-status {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--r-full);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.tcard.idle .tcard-status { background: var(--n-200); color: var(--n-600); }
+.tcard.active .tcard-status { background: var(--s-active); color: white; }
+.tcard.warn .tcard-status { background: var(--s-warn); color: var(--n-800); }
+.tcard.expired .tcard-status { background: var(--s-expired); color: white; }
+.tcard.overtime .tcard-status { background: var(--s-overtime); color: white; }
+
+.tcard-time {
+  font-size: 0.8125rem;
+  color: var(--n-600);
+  margin-bottom: var(--sp-1);
+}
+
+.tcard-remain {
+  font-size: 1.25rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+.tcard.idle .tcard-remain { color: var(--n-400); font-weight: 500; font-size: 0.875rem; }
+.tcard.active .tcard-remain { color: var(--s-active); }
+.tcard.warn .tcard-remain { color: oklch(45% 0.15 75); }
+.tcard.expired .tcard-remain { color: var(--s-expired); }
+.tcard.overtime .tcard-remain { color: white; }
+
+.tcard-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--sp-2);
+  font-size: 0.75rem;
+  color: var(--n-500);
+}
+
+.tcard-duration {
+  background: oklch(20% 0.01 35 / 0.08);
+  padding: 1px 6px;
+  border-radius: var(--r-sm);
+  font-weight: 600;
+}
+
+.tcard-extend-badge {
+  position: absolute;
+  top: var(--sp-2);
+  right: -20px;
+  background: var(--c-primary);
+  color: white;
+  font-size: 0.625rem;
+  font-weight: 700;
+  padding: 1px 24px;
+  transform: rotate(35deg);
+}
+
+/* ============================================
+   按钮
+   ============================================ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-4);
+  border: none;
+  border-radius: var(--r-md);
+  font-family: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease-out);
+  min-height: 44px;
+  text-decoration: none;
+}
+.btn:active { transform: scale(0.97); }
+
+.btn-primary {
+  background: var(--c-primary);
+  color: white;
+}
+.btn-primary:hover { background: var(--c-primary-dark); }
+
+.btn-secondary {
+  background: white;
+  color: var(--n-700);
+  border: 1px solid var(--n-300);
+}
+
+.btn-danger {
+  background: var(--c-danger);
+  color: white;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--n-600);
+  border: 1px solid var(--n-300);
+}
+
+.btn-lg {
+  padding: var(--sp-3) var(--sp-5);
+  font-size: 1rem;
+  min-height: 52px;
+}
+
+.btn-sm {
+  padding: var(--sp-1) var(--sp-3);
+  font-size: 0.8125rem;
+  min-height: 36px;
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ============================================
+   模态框
+   ============================================ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: oklch(15% 0.01 35 / 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 2000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-4);
+  animation: fadeIn var(--dur-fast);
+}
+.modal-overlay.show { display: flex; }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal {
+  background: white;
+  border-radius: var(--r-xl);
+  padding: var(--sp-5);
+  max-width: 460px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--sh-lg);
+  animation: modalIn var(--dur-mid) var(--ease-out);
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  margin-bottom: var(--sp-4);
+  color: var(--n-800);
+}
+
+.modal-body { margin-bottom: var(--sp-5); }
+
+.modal-actions {
+  display: flex;
+  gap: var(--sp-3);
+}
+.modal-actions .btn { flex: 1; }
+
+/* ============================================
+   表单元素
+   ============================================ */
+.field { margin-bottom: var(--sp-4); }
+.field-label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--n-600);
+  margin-bottom: var(--sp-2);
+}
+
+.input {
+  width: 100%;
+  padding: var(--sp-3) var(--sp-4);
+  border: 2px solid var(--n-200);
+  border-radius: var(--r-md);
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--n-800);
+  background: white;
+  transition: border-color var(--dur-fast);
+  min-height: 48px;
+}
+.input:focus { border-color: var(--c-primary); }
+
+.duration-options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sp-2);
+}
+.dur-btn {
+  padding: var(--sp-4) var(--sp-2);
+  border: 2px solid var(--n-200);
+  border-radius: var(--r-md);
+  background: white;
+  font-family: inherit;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--n-600);
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease-out);
+  text-align: center;
+}
+.dur-btn:active { transform: scale(0.95); }
+.dur-btn.selected {
+  border-color: var(--c-primary);
+  background: var(--c-primary-bg);
+  color: var(--c-primary-dark);
+}
+.dur-btn .dur-sub {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--n-400);
+  margin-top: var(--sp-1);
+}
+.dur-more-btn {
+  grid-column: 1 / -1;
+  padding: var(--sp-2);
+  border: none;
+  background: transparent;
+  color: var(--n-400);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  text-align: center;
+  transition: color var(--dur-fast);
+}
+.dur-more-btn:active { color: var(--c-primary); }
+.dur-extra { display: none; }
+.dur-extra.show { display: contents; }
+
+/* 全天按钮默认样式 — 灰色虚线，和普通按钮区分但不抢眼 */
+.dur-btn-fullday {
+  border-style: dashed;
+  border-color: var(--n-300);
+  color: var(--n-500);
+  background: var(--n-50);
+}
+/* 全天按钮选中样式 — 主色高亮 */
+.dur-btn-fullday.selected {
+  border-style: solid;
+  border-color: var(--c-primary);
+  background: var(--c-primary-bg);
+  color: var(--c-primary-dark);
+}
+.dur-btn-fullday .fullday-sub { color: var(--n-400); }
+.dur-btn-fullday.selected .fullday-sub { color: var(--c-primary); }
+
+.operator-tags {
+  display: flex;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+.op-tag {
+  padding: var(--sp-2) var(--sp-4);
+  border: 2px solid var(--n-200);
+  border-radius: var(--r-full);
+  background: white;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--n-600);
+  cursor: pointer;
+  transition: all var(--dur-fast);
+}
+.op-tag.selected {
+  border-color: var(--c-primary);
+  background: var(--c-primary-bg);
+  color: var(--c-primary-dark);
+}
+
+/* ============================================
+   Toast
+   ============================================ */
+.toast-container {
+  position: fixed;
+  top: calc(var(--sp-5) + var(--safe-top));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3000;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  pointer-events: none;
+  width: max-content;
+  max-width: calc(100vw - var(--safe-left) - var(--safe-right) - var(--sp-4));
+}
+
+.toast {
+  background: var(--n-800);
+  color: white;
+  padding: var(--sp-3) var(--sp-5);
+  border-radius: var(--r-md);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  box-shadow: var(--sh-lg);
+  animation: toastIn var(--dur-mid) var(--ease-out);
+  pointer-events: auto;
+}
+.toast.success { background: var(--c-success); }
+.toast.error { background: var(--c-danger); }
+.toast.warn { background: oklch(55% 0.15 65); }
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================
+   图表页
+   ============================================ */
+.chart-section {
+  background: white;
+  border-radius: var(--r-lg);
+  padding: var(--sp-5);
+  margin-bottom: var(--sp-4);
+  box-shadow: var(--sh-sm);
+}
+
+.section-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--n-800);
+  margin-bottom: var(--sp-4);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.chart-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-5);
+  flex-wrap: wrap;
+}
+
+.donut-wrap {
+  position: relative;
+  width: 200px;
+  height: 200px;
+}
+.donut-center {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+.donut-center-num {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+}
+.donut-center-label {
+  font-size: 0.8125rem;
+  color: var(--n-500);
+}
+
+.chart-legend {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: 0.875rem;
+  cursor: pointer;
+  padding: var(--sp-1) var(--sp-2);
+  border-radius: var(--r-sm);
+  transition: background var(--dur-fast);
+}
+.legend-item:hover { background: var(--n-100); }
+
+.legend-dot {
+  width: 12px; height: 12px;
+  border-radius: 3px;
+}
+
+.legend-val {
+  font-weight: 700;
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================
+   日志页
+   ============================================ */
+.log-filters {
+  display: flex;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--sp-4);
+  align-items: flex-end;
+}
+
+.log-list {
+  background: white;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  box-shadow: var(--sh-sm);
+}
+
+.log-item {
+  display: grid;
+  grid-template-columns: 80px 1fr auto;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--n-100);
+  font-size: 0.875rem;
+  align-items: center;
+}
+.log-item:last-child { border-bottom: none; }
+
+.log-time {
+  color: var(--n-500);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.8125rem;
+}
+
+.log-desc { color: var(--n-700); }
+.log-desc strong { color: var(--n-800); }
+
+.log-action {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--r-full);
+}
+.log-action.start { background: var(--s-active-bg); color: var(--s-active); }
+.log-action.extend { background: var(--c-primary-bg); color: var(--c-primary-dark); }
+.log-action.clear { background: var(--n-200); color: var(--n-600); }
+.log-action.modify { background: var(--c-primary-bg); color: var(--c-primary-dark); }
+
+.log-empty {
+  text-align: center;
+  padding: var(--sp-7);
+  color: var(--n-400);
+  font-size: 0.9375rem;
+}
+
+/* ============================================
+   数据管理页
+   ============================================ */
+.data-card {
+  background: white;
+  border-radius: var(--r-lg);
+  padding: var(--sp-5);
+  margin-bottom: var(--sp-4);
+  box-shadow: var(--sh-sm);
+}
+
+.storage-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--n-200);
+  border-radius: var(--r-md);
+  margin-bottom: var(--sp-2);
+}
+
+.storage-date {
+  font-weight: 700;
+  color: var(--n-800);
+  min-width: 100px;
+}
+.storage-date.today { color: var(--c-primary); }
+
+.storage-info {
+  flex: 1;
+  font-size: 0.8125rem;
+  color: var(--n-500);
+}
+
+.storage-size {
+  font-weight: 600;
+  color: var(--n-600);
+  font-variant-numeric: tabular-nums;
+}
+
+.warning-box {
+  background: var(--s-warn-bg);
+  border: 1px solid var(--s-warn);
+  border-radius: var(--r-md);
+  padding: var(--sp-4);
+  margin-bottom: var(--sp-4);
+  display: flex;
+  gap: var(--sp-3);
+  align-items: flex-start;
+}
+
+.warning-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.warning-text {
+  font-size: 0.875rem;
+  color: oklch(40% 0.10 75);
+  line-height: 1.5;
+}
+
+/* ============================================
+   说明页
+   ============================================ */
+.guide-section {
+  background: white;
+  border-radius: var(--r-lg);
+  padding: var(--sp-5);
+  margin-bottom: var(--sp-4);
+  box-shadow: var(--sh-sm);
+}
+
+.guide-section h3 {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: var(--n-800);
+  margin-bottom: var(--sp-3);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.guide-section p, .guide-section li {
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: var(--n-600);
+}
+
+.guide-section ul, .guide-section ol {
+  padding-left: var(--sp-5);
+}
+
+.guide-section li { margin-bottom: var(--sp-1); }
+
+.guide-step {
+  display: flex;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+}
+
+.guide-step-num {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-full);
+  background: var(--c-primary);
+  color: white;
+  font-weight: 800;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.color-guide {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--sp-3);
+}
+
+.color-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  border-radius: var(--r-md);
+  border: 1px solid var(--n-200);
+}
+
+.color-swatch {
+  width: 40px; height: 40px;
+  border-radius: var(--r-md);
+  border: 2px solid;
+  flex-shrink: 0;
+}
+
+.color-info { font-size: 0.875rem; }
+.color-info strong { display: block; color: var(--n-800); }
+.color-info span { color: var(--n-500); font-size: 0.75rem; }
+
+/* ============================================
+   空状态
+   ============================================ */
+.empty {
+  text-align: center;
+  padding: var(--sp-8) var(--sp-4);
+  color: var(--n-400);
+}
+.empty-icon { font-size: 3rem; margin-bottom: var(--sp-3); }
+.empty-title { font-size: 1.125rem; font-weight: 600; margin-bottom: var(--sp-1); color: var(--n-500); }
+.empty-desc { font-size: 0.875rem; }
+
+/* ============================================
+   响应式 — 完整断点系统
+   断点设计：
+     ≤480px  : iPhone SE / 小屏手机竖屏
+     ≤600px  : 普通手机竖屏
+     ≤768px  : 大屏手机 / 小平板竖屏
+     ≤1024px : 平板竖屏 / 手机横屏
+     ≤1366px : 平板横屏 / 小笔记本
+     >1366px : 桌面大屏
+   ============================================ */
+
+/* 超小屏 — iPhone SE 等 */
+@media (max-width: 480px) {
+  .topbar-main { padding: var(--sp-2) var(--sp-2); gap: var(--sp-2); }
+  .logo { font-size: 1rem; }
+  .logo span:last-child { display: none; }
+  .logo::after { content: '管家'; font-size: 1rem; font-weight: 800; color: var(--c-primary-dark); }
+  .logo-dot { width: 10px; height: 10px; box-shadow: 0 0 0 2px var(--c-primary-light); }
+  .stat-chip { padding: 2px var(--sp-2); font-size: 0.75rem; }
+  .stat-chip .chip-dot { width: 6px; height: 6px; }
+  .stat-chip span:nth-child(2) { display: none; } /* 只显示数字 */
+  .tab { padding: var(--sp-2); font-size: 0.8125rem; }
+  .page { padding: var(--sp-2); padding-bottom: calc(var(--sp-7) + var(--safe-bottom)); }
+  .table-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: var(--sp-2); }
+  .tcard { padding: var(--sp-2); border-radius: var(--r-md); }
+  .tcard-num { font-size: 1.125rem; }
+  .tcard-remain { font-size: 0.9375rem; }
+  .tcard-time { font-size: 0.6875rem; }
+  .tcard-foot { font-size: 0.6875rem; }
+  .tcard-status { font-size: 0.625rem; padding: 1px 6px; }
+  .modal { padding: var(--sp-4); border-radius: var(--r-lg); }
+  .modal-title { font-size: 1.125rem; }
+  .dur-btn { font-size: 1rem; padding: var(--sp-3) var(--sp-1); }
+  .btn { font-size: 0.875rem; min-height: 40px; padding: var(--sp-2) var(--sp-3); }
+  .btn-lg { min-height: 48px; }
+  .log-item { grid-template-columns: 50px 1fr; padding: var(--sp-2) var(--sp-3); font-size: 0.8125rem; }
+  .log-item .log-action { grid-column: 2; justify-self: start; margin-top: 4px; }
+  .toolbar { gap: var(--sp-2); }
+  .toolbar-title { font-size: 1rem; }
+  .chart-section { padding: var(--sp-3); }
+  .summary-cards { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: var(--sp-2); }
+  .sum-card .sum-val { font-size: 1.375rem; }
+  .filter-pills { gap: var(--sp-1); }
+  .pill { font-size: 0.75rem; padding: var(--sp-1) var(--sp-2); }
+  .color-guide { grid-template-columns: 1fr; }
+  .login-card { padding: var(--sp-5); }
+  .login-title { font-size: 1.25rem; }
+  .user-name { max-width: 60px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+
+/* 普通手机竖屏 */
+@media (min-width: 481px) and (max-width: 600px) {
+  .topbar-main { padding: var(--sp-2) var(--sp-3); }
+  .page { padding: var(--sp-3); padding-bottom: calc(var(--sp-7) + var(--safe-bottom)); }
+  .table-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: var(--sp-2); }
+  .tcard { padding: var(--sp-2); }
+  .tcard-num { font-size: 1.25rem; }
+  .tab { padding: var(--sp-2) var(--sp-3); font-size: 0.875rem; }
+  .log-item { grid-template-columns: 60px 1fr; }
+  .log-item .log-action { grid-column: 2; justify-self: start; margin-top: 4px; }
+}
+
+/* 大屏手机 / 小平板竖屏 */
+@media (min-width: 601px) and (max-width: 768px) {
+  .page { padding: var(--sp-4); padding-bottom: calc(var(--sp-7) + var(--safe-bottom)); }
+  .table-grid { grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); }
+}
+
+/* 平板竖屏 (iPad mini/Pro 9.7 竖屏) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .page { padding: var(--sp-4) var(--sp-5); max-width: 900px; }
+  .table-grid { grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: var(--sp-3); }
+  .tcard { padding: var(--sp-3); }
+  .tcard-num { font-size: 1.375rem; }
+  .tcard-remain { font-size: 1.125rem; }
+}
+
+/* 平板横屏 (iPad 横屏 / Surface) — 主力使用场景 */
+@media (min-width: 1025px) and (max-width: 1366px) {
+  .page { padding: var(--sp-4) var(--sp-6); max-width: 1200px; }
+  .table-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: var(--sp-3); }
+  .tcard { padding: var(--sp-3); }
+  .tcard-num { font-size: 1.5rem; }
+  .tcard-remain { font-size: 1.25rem; }
+  .topbar-main { padding: var(--sp-3) var(--sp-6); }
+}
+
+/* 桌面大屏 */
+@media (min-width: 1367px) {
+  .page { max-width: 1400px; }
+  .table-grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+}
+
+/* 横屏手机特殊处理 */
+@media (max-height: 500px) and (orientation: landscape) {
+  .topbar-main { padding: var(--sp-1) var(--sp-3); }
+  .logo { font-size: 1rem; }
+  .tab { padding: var(--sp-1) var(--sp-3); font-size: 0.8125rem; }
+  .page { padding: var(--sp-2) var(--sp-3); }
+  .table-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: var(--sp-2); }
+  .tcard { padding: var(--sp-2); }
+  .tcard-num { font-size: 1.125rem; }
+  .modal { max-height: 85vh; }
+}
+
+/* 深色模式跟随系统 */
+@media (prefers-color-scheme: dark) {
+  /* 暂不启用 — 保持浅色主题确保门店强光下可读性 */
+}
+
+/* 底部安全区留白 */
+.page {
+  padding-bottom: max(var(--sp-7), calc(var(--safe-bottom) + var(--sp-5)));
+}
+
+/* 模态框安全区适配 */
+.modal {
+  margin: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
+}
+
+/* 统计汇总数字卡片 */
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-5);
+}
+
+.sum-card {
+  background: white;
+  border-radius: var(--r-md);
+  padding: var(--sp-3) var(--sp-4);
+  border-left: 4px solid;
+  cursor: pointer;
+  transition: transform var(--dur-fast);
+}
+.sum-card:active { transform: scale(0.97); }
+
+.sum-card .sum-label {
+  font-size: 0.75rem;
+  color: var(--n-500);
+  font-weight: 600;
+}
+.sum-card .sum-val {
+  font-size: 1.75rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  margin-top: 2px;
+}
+
+/* ============================================
+   登录页
+   ============================================ */
+.login-overlay {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, var(--c-primary-bg), var(--n-50));
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(var(--sp-4) + var(--safe-top)) calc(var(--sp-4) + var(--safe-right)) calc(var(--sp-4) + var(--safe-bottom)) calc(var(--sp-4) + var(--safe-left));
+  animation: fadeIn var(--dur-mid);
+  overflow-y: auto;
+}
+
+.login-card {
+  background: white;
+  border-radius: var(--r-xl);
+  padding: var(--sp-6);
+  max-width: 420px;
+  width: 100%;
+  box-shadow: var(--sh-lg);
+  text-align: center;
+}
+
+.login-logo {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--r-lg);
+  background: var(--c-primary);
+  margin: 0 auto var(--sp-4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  box-shadow: 0 4px 12px oklch(62% 0.18 35 / 0.3);
+}
+
+.login-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--n-800);
+  margin-bottom: var(--sp-1);
+}
+
+.login-sub {
+  font-size: 0.875rem;
+  color: var(--n-500);
+  margin-bottom: var(--sp-5);
+}
+
+.login-operators {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-4);
+}
+
+.login-op-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border: 2px solid var(--n-200);
+  border-radius: var(--r-md);
+  background: white;
+  font-family: inherit;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--n-700);
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease-out);
+  text-align: left;
+}
+.login-op-btn:active { transform: scale(0.98); }
+.login-op-btn:hover { border-color: var(--c-primary); background: var(--c-primary-bg); }
+
+.login-op-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-full);
+  background: var(--c-primary-bg);
+  color: var(--c-primary-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.125rem;
+  flex-shrink: 0;
+}
+
+.login-op-btn .login-op-role {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: var(--n-400);
+  font-weight: 500;
+}
+
+.login-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin: var(--sp-4) 0;
+  color: var(--n-400);
+  font-size: 0.8125rem;
+}
+.login-divider::before, .login-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--n-200);
+}
+
+/* 当前用户栏 */
+.user-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-1) var(--sp-3);
+  background: white;
+  border: 1px solid var(--n-200);
+  border-radius: var(--r-full);
+  cursor: pointer;
+  transition: all var(--dur-fast);
+  flex-shrink: 0;
+}
+.user-bar:active { transform: scale(0.97); }
+.user-bar:hover { border-color: var(--c-primary); }
+
+.user-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-full);
+  background: var(--c-primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.8125rem;
+}
+
+.user-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--n-700);
+  white-space: nowrap;
+}
+
+.user-logout {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: var(--n-100);
+  border-radius: var(--r-full);
+  color: var(--n-500);
+  font-size: 0.75rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--dur-fast);
+}
+.user-logout:hover { background: var(--c-danger); color: white; }
+
+</style>
+</head>
+<body>
+
+<!-- ============================================
+     登录页
+     ============================================ -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-card">
+    <div class="login-logo">🏺</div>
+    <div class="login-title">陶源里桌台管家</div>
+    <div class="login-sub" id="loginSubText">选择操作员登录</div>
+    <div class="login-operators" id="loginOperators"></div>
+    <div id="noOperatorHint" style="display:none;padding:var(--sp-3);background:var(--n-50);border-radius:var(--r-md);font-size:0.8125rem;color:var(--n-500);text-align:center;margin-bottom:var(--sp-3);">暂无已注册操作员，请在下方注册</div>
+    <div class="login-divider">新员工首次登录</div>
+    <div class="field" style="margin:0;text-align:left;">
+      <label class="field-label">操作员名字</label>
+      <input type="text" class="input" id="loginNewName" placeholder="1-12位中英文/数字" maxlength="12" autocomplete="off" autocapitalize="none" style="margin-bottom:var(--sp-3);" onkeydown="if(event.key==='Enter')document.getElementById('loginRegKey').focus()">
+      <label class="field-label">注册密钥（向店长获取）</label>
+      <div style="display:flex;gap:var(--sp-2);">
+        <input type="password" class="input" id="loginRegKey" placeholder="输入注册密钥" maxlength="32" autocomplete="off" autocapitalize="none" style="flex:1;" onkeydown="if(event.key==='Enter')loginAsNew()">
+        <button class="btn btn-primary" onclick="loginAsNew()">注册并登录</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 操作员管理模态框 -->
+<div class="modal-overlay" id="revokeModal">
+  <div class="modal">
+    <div class="modal-title">⚙ 操作员管理</div>
+    <div class="modal-body">
+      <!-- 未验证状态：显示密钥输入 -->
+      <div id="revokeAuthSection">
+        <div style="padding:var(--sp-3);background:var(--n-50);border-radius:var(--r-md);margin-bottom:var(--sp-4);font-size:0.8125rem;color:var(--n-600);line-height:1.6;">
+          🔒 出于安全考虑，管理操作员需要验证管理密钥。<br>
+          这里可以：<strong>停用/启用单个操作员</strong>，也可以<strong>一键停用全部</strong>。<br>
+          <span style="color:var(--n-400);">停用不会删除任何数据，只是阻止该操作员登录。</span>
+        </div>
+        <div class="field">
+          <label class="field-label">管理密钥</label>
+          <div style="display:flex;gap:var(--sp-2);">
+            <input type="password" class="input" id="revokeKey" placeholder="输入管理密钥" maxlength="32" autocomplete="off" autocapitalize="none" style="flex:1;" onkeydown="if(event.key==='Enter')doRevokeAll()">
+            <button class="btn btn-primary" onclick="doRevokeAll()">验证并查看列表</button>
+          </div>
+        </div>
+      </div>
+      <!-- 已验证状态：显示操作员列表 -->
+      <div id="revokeList" style="display:none;">
+        <div class="field-label" style="margin-bottom:var(--sp-3);display:flex;align-items:center;justify-content:space-between;">
+          <span>操作员列表（点击停用/启用）</span>
+          <button class="btn btn-ghost btn-sm" onclick="resetRevokeAuth()" style="font-size:0.75rem;color:var(--n-400);">🔒 重新锁定</button>
+        </div>
+        <div id="revokeOpList"></div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('revokeModal')">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+     顶部导航
+     ============================================ -->
+<div class="topbar">
+  <div class="topbar-main">
+    <div class="logo">
+      <span class="logo-dot"></span>
+      <span>陶源里桌台管家</span>
+    </div>
+    <div class="stats-strip" id="statsStrip"></div>
+    <div class="user-bar" id="userBar" onclick="openSwitchModal()" style="display:none;">
+      <div class="user-avatar" id="userAvatar">F</div>
+      <span class="user-name" id="userName">操作员</span>
+      <button class="user-logout" onclick="event.stopPropagation();logout()" title="登出">⏻</button>
+    </div>
+  </div>
+  <div class="tabbar" id="tabbar">
+    <button class="tab active" data-page="tables">桌台总览</button>
+    <button class="tab" data-page="filter">筛选统计</button>
+    <button class="tab" data-page="charts">图表</button>
+    <button class="tab" data-page="logs">操作日志</button>
+    <button class="tab" data-page="data">数据管理</button>
+    <button class="tab" data-page="guide">使用说明</button>
+  </div>
+</div>
+
+<!-- ============================================
+     桌台总览
+     ============================================ -->
+<div class="page active" id="page-tables">
+  <div class="toolbar">
+    <span class="toolbar-title" id="tablesTitle">桌台总览</span>
+    <div class="toolbar-spacer"></div>
+    <button class="btn btn-primary btn-sm" onclick="addOneTable()" style="font-weight:700;gap:4px;"><span style="font-size:1.1rem;line-height:1;">＋</span> 添加桌台</button>
+    <button class="btn btn-ghost btn-sm" onclick="openConfigModal()">批量设置</button>
+  </div>
+  <div class="table-grid" id="tableGrid"></div>
+</div>
+
+<!-- ============================================
+     筛选统计
+     ============================================ -->
+<div class="page" id="page-filter">
+  <div class="toolbar">
+    <span class="toolbar-title">筛选统计</span>
+  </div>
+
+  <div class="field">
+    <label class="field-label">按状态</label>
+    <div class="filter-pills" id="filterStatus">
+      <button class="pill active" data-filter="status" data-val="all">全部</button>
+      <button class="pill" data-filter="status" data-val="idle">空闲</button>
+      <button class="pill" data-filter="status" data-val="active">使用中</button>
+      <button class="pill" data-filter="status" data-val="warn">即将到期</button>
+      <button class="pill" data-filter="status" data-val="expired">已到期</button>
+      <button class="pill" data-filter="status" data-val="overtime">超时10分钟+</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <label class="field-label">按时长</label>
+    <div class="filter-pills" id="filterDuration">
+      <button class="pill active" data-filter="duration" data-val="all">全部</button>
+      <button class="pill" data-filter="duration" data-val="1">1h</button>
+      <button class="pill" data-filter="duration" data-val="2">2h</button>
+      <button class="pill" data-filter="duration" data-val="3">3h</button>
+      <button class="pill" data-filter="duration" data-val="4">4h</button>
+      <button class="pill" data-filter="duration" data-val="5">5h</button>
+      <button class="pill" data-filter="duration" data-val="6">6h</button>
+      <button class="pill" data-filter="duration" data-val="7+">7h+</button>
+    </div>
+  </div>
+
+  <div style="margin-top: var(--sp-5);">
+    <div class="toolbar-title" style="margin-bottom: var(--sp-3);" id="filterResultTitle">筛选结果</div>
+    <div class="table-grid" id="filterGrid"></div>
+  </div>
+</div>
+
+<!-- ============================================
+     图表
+     ============================================ -->
+<div class="page" id="page-charts">
+  <div class="toolbar">
+    <span class="toolbar-title">图表统计</span>
+    <div class="toolbar-spacer"></div>
+    <div style="display:flex;align-items:center;gap:var(--sp-2);">
+      <span style="font-size:0.8125rem;color:var(--n-500);">统计日期</span>
+      <select id="chartDate" class="input" style="width:auto;min-height:36px;padding:4px var(--sp-2);font-size:0.8125rem;" onchange="renderCharts()"></select>
+    </div>
+  </div>
+
+  <div class="chart-section">
+    <div class="section-title">桌台状态分布（实时）</div>
+    <div class="chart-wrap" id="donutChart"></div>
+  </div>
+
+  <div class="chart-section">
+    <div class="section-title">开台时长分布（按开台记录）</div>
+    <div id="barChart"></div>
+  </div>
+
+  <div class="chart-section">
+    <div class="section-title" id="summaryTitle">今日运营概览</div>
+    <div class="summary-cards" id="todaySummary"></div>
+  </div>
+</div>
+
+<!-- ============================================
+     操作日志
+     ============================================ -->
+<div class="page" id="page-logs">
+  <div class="toolbar">
+    <span class="toolbar-title">操作日志</span>
+  </div>
+
+  <div class="log-filters">
+    <div class="field" style="margin:0;">
+      <label class="field-label">操作员</label>
+      <select class="input" id="logOperator" style="min-height:40px;padding:8px 12px;">
+        <option value="">全部</option>
+      </select>
+    </div>
+    <div class="field" style="margin:0;">
+      <label class="field-label">日期</label>
+      <select class="input" id="logDate" style="min-height:40px;padding:8px 12px;">
+        <option value="">全部</option>
+      </select>
+    </div>
+    <div class="field" style="margin:0;">
+      <label class="field-label">操作类型</label>
+      <select class="input" id="logAction" style="min-height:40px;padding:8px 12px;">
+        <option value="">全部</option>
+        <option value="start">开台</option>
+        <option value="extend">续时</option>
+        <option value="clear">清桌</option>
+      </select>
+    </div>
+    <button class="btn btn-secondary btn-sm" onclick="exportLogs()">导出日志</button>
+  </div>
+
+  <div class="log-list" id="logList"></div>
+</div>
+
+<!-- ============================================
+     数据管理
+     ============================================ -->
+<div class="page" id="page-data">
+  <div class="toolbar">
+    <span class="toolbar-title">数据管理</span>
+  </div>
+
+  <div class="warning-box">
+    <span class="warning-icon">⚠️</span>
+    <div class="warning-text">
+      <strong>重要规则：</strong>当天的数据 <strong>严禁清理</strong>，只可清理昨天及更早的数据。<br>
+      数据按日期分区存储，自动清理默认保留 2 天（今天 + 昨天）。
+    </div>
+  </div>
+
+  <div class="data-card">
+    <div class="section-title">自动清理</div>
+    <div style="display:flex;align-items:center;gap:var(--sp-3);margin-bottom:var(--sp-3);">
+      <label style="display:flex;align-items:center;gap:var(--sp-2);cursor:pointer;">
+        <input type="checkbox" id="autoCleanToggle" style="width:20px;height:20px;">
+        <span style="font-weight:600;">启用自动清理</span>
+      </label>
+    </div>
+    <div style="display:flex;align-items:center;gap:var(--sp-2);margin-bottom:var(--sp-3);">
+      <span style="font-size:0.875rem;color:var(--n-600);">保留天数：</span>
+      <input type="number" class="input" id="retentionDays" value="2" min="1" max="30" style="width:80px;min-height:40px;text-align:center;">
+      <span style="font-size:0.8125rem;color:var(--n-500);">天（含今天）</span>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="saveAutoClean()">保存设置</button>
+  </div>
+
+  <div class="data-card">
+    <div class="section-title">按日期查看 / 手动清理</div>
+    <div id="storageList"></div>
+  </div>
+
+  <div class="data-card" id="backupSection" style="display:none;">
+    <div class="section-title">备份与恢复</div>
+    <div style="display:flex;gap:var(--sp-3);flex-wrap:wrap;">
+      <button class="btn btn-secondary" onclick="exportData()">导出全部数据</button>
+      <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">导入数据</button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+    </div>
+    <div id="backupInfoSection" style="margin-top:var(--sp-4);padding:var(--sp-3);background:var(--n-50);border-radius:var(--r-md);"></div>
+  </div>
+</div>
+
+<!-- ============================================
+     使用说明
+     ============================================ -->
+<div class="page" id="page-guide">
+  <div class="toolbar">
+    <span class="toolbar-title">使用说明</span>
+  </div>
+
+  <div class="guide-section">
+    <h3>🎯 系统简介</h3>
+    <p>这是陶源里的桌台管理系统。顾客购买了时长券，到店后选择空闲桌台开始计时。系统会自动提醒到期和超时，帮助店员高效管理。</p>
+  </div>
+
+  <div class="guide-section">
+    <h3>🚀 快速上手</h3>
+    <div class="guide-step">
+      <div class="guide-step-num">0</div>
+      <div>
+        <strong>登录</strong><br>
+        <span style="color:var(--n-600);font-size:0.875rem;">打开系统选择操作员登录。新操作员首次登录需要<strong>注册密钥</strong>（向店长获取）。登录后所有操作自动归属当前用户，右上角显示当前操作员，点击可登出。</span>
+      </div>
+    </div>
+    <div class="guide-step">
+      <div class="guide-step-num">1</div>
+      <div>
+        <strong>开台</strong><br>
+        <span style="color:var(--n-600);font-size:0.875rem;">点击任意空闲桌台卡片 → 选择时长（1/2/3小时）→ 确认开台（操作员已自动填入）</span>
+      </div>
+    </div>
+    <div class="guide-step">
+      <div class="guide-step-num">2</div>
+      <div>
+        <strong>续时</strong><br>
+        <span style="color:var(--n-600);font-size:0.875rem;">点击使用中的桌台 → 选择"续时" → 选择增加的时长 → 确认。续时后桌台卡片右上角会出现"续"标记</span>
+      </div>
+    </div>
+    <div class="guide-step">
+      <div class="guide-step-num">3</div>
+      <div>
+        <strong>清桌</strong><br>
+        <span style="color:var(--n-600);font-size:0.875rem;">顾客结束使用后，点击桌台 → 选择"清桌"，桌台恢复空闲状态，本次会话记录存入日志</span>
+      </div>
+    </div>
+    <div class="guide-step">
+      <div class="guide-step-num">4</div>
+      <div>
+        <strong>查看提醒</strong><br>
+        <span style="color:var(--n-600);font-size:0.875rem;">桌台卡片颜色会随剩余时间自动变化，顶部统计栏也会实时显示各状态数量</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="guide-section">
+    <h3>🎨 桌台颜色含义</h3>
+    <div class="color-guide">
+      <div class="color-item">
+        <div class="color-swatch" style="background:var(--s-idle-bg);border-color:var(--s-idle);"></div>
+        <div class="color-info"><strong>空闲</strong><span>无人使用，可开台</span></div>
+      </div>
+      <div class="color-item">
+        <div class="color-swatch" style="background:var(--s-active-bg);border-color:var(--s-active);"></div>
+        <div class="color-info"><strong>使用中</strong><span>剩余时间充足</span></div>
+      </div>
+      <div class="color-item">
+        <div class="color-swatch" style="background:var(--s-warn-bg);border-color:var(--s-warn);"></div>
+        <div class="color-info"><strong>即将到期</strong><span>剩余 ≤ 10 分钟</span></div>
+      </div>
+      <div class="color-item">
+        <div class="color-swatch" style="background:var(--s-expired-bg);border-color:var(--s-expired);"></div>
+        <div class="color-info"><strong>已到期</strong><span>时间到，需提醒续时或清桌</span></div>
+      </div>
+      <div class="color-item">
+        <div class="color-swatch" style="background:var(--s-overtime-bg);border-color:var(--s-overtime);"></div>
+        <div class="color-info"><strong>超时 10 分钟+</strong><span>严重超时，需立即处理</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="guide-section">
+    <h3>📊 功能说明</h3>
+    <ul>
+      <li><strong>桌台总览：</strong>所有桌台一览，点击操作。桌台较多时自动分页，滚动到底部点击"加载更多"</li>
+      <li><strong>添加桌台：</strong>点击"＋ 添加桌台"按钮，每次增加一张，自动跳转到新桌位置</li>
+      <li><strong>筛选统计：</strong>按状态/时长/提醒级别筛选桌台</li>
+      <li><strong>图表：</strong>环形图看状态比例，柱状图看时长分布，点击可跳转筛选</li>
+      <li><strong>操作日志：</strong>按操作员、日期、类型筛选查看，支持导出</li>
+      <li><strong>数据管理：</strong>查看各日期数据大小，手动/自动清理，备份导出导入</li>
+    </ul>
+  </div>
+
+  <div class="guide-section">
+    <h3>💾 数据存储说明</h3>
+    <ul>
+      <li>所有数据存储在浏览器的 LocalStorage 中，<strong>刷新页面不会丢失</strong></li>
+      <li>数据按日期分区，方便管理和清理</li>
+      <li><strong>当天数据严禁清理</strong>，系统强制禁止</li>
+      <li>建议定期导出数据作为备份</li>
+      <li>清理浏览器缓存 / 无痕模式会导致数据丢失，请使用正常浏览器</li>
+      <li><strong>到期声音提醒：</strong>桌台到期时会有蜂鸣声提示（1声=到期，2声=超时），手机/平板会有振动。首次需点击页面后才能播放声音。</li>
+    </ul>
+  </div>
+
+  <div class="guide-section">
+    <h3>❓ 常见问题</h3>
+    <p><strong>Q: 不小心关了页面怎么办？</strong><br>A: 重新打开即可，所有桌台状态和计时会自动恢复。</p>
+    <br>
+    <p><strong>Q: 如何增加/减少桌台数量？</strong><br>A: 点击"添加桌台"按钮可以一张张增加；也可以在"批量设置"中直接设置总桌数。</p>
+    <br>
+    <p><strong>Q: 到期了会怎样？</strong><br>A: 桌台颜色变红，顶部统计数字增加。超时 10 分钟后桌台会脉冲闪烁提醒。可续时或清桌。</p>
+    <br>
+    <p><strong>Q: 新员工怎么登录？</strong><br>A: 在登录页底部输入操作员名字 + 注册密钥（向店长获取），点击"注册并登录"。</p>
+    <br>
+    <p><strong>Q: 员工离职了怎么办？</strong><br>A: 在登录页点击"操作员管理" → 输入管理密钥 → 找到该操作员点击"停用"。停用后该操作员无法登录，但数据保留。如果员工回来了，点击"启用"即可恢复。</p>
+    <br>
+    <p><strong>Q: 换人接班怎么切换操作员？</strong><br>A: 点击右上角当前操作员栏 → 弹出切换面板 → 选择要切换的人。数据不丢，后续操作自动归属新操作员。</p>
+  </div>
+</div>
+
+<!-- ============================================
+     切换操作员模态框
+     ============================================ -->
+<div class="modal-overlay" id="switchModal">
+  <div class="modal">
+    <div class="modal-title">当前操作员</div>
+    <div class="modal-body" id="switchModalBody"></div>
+  </div>
+</div>
+
+<!-- ============================================
+     操作模态框
+     ============================================ -->
+<div class="modal-overlay" id="actionModal">
+  <div class="modal" id="actionModalContent"></div>
+</div>
+
+<!-- 配置模态框 -->
+<div class="modal-overlay" id="configModal">
+  <div class="modal">
+    <div class="modal-title">店铺设置</div>
+    <div class="modal-body">
+      <div class="field">
+        <label class="field-label">桌台总数（批量生成 1~N 号桌）</label>
+        <input type="number" class="input" id="cfgTableCount" min="1" max="1000" style="text-align:center;font-size:1.5rem;font-weight:700;">
+        <div style="display:flex;gap:var(--sp-2);margin-top:var(--sp-2);">
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('cfgTableCount').value=50;showToast('已设为50')">默认50</button>
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('cfgTableCount').value=100;showToast('已设为100')">默认100</button>
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('cfgTableCount').value=200;showToast('已设为200')">默认200</button>
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('cfgTableCount').value=300;showToast('已设为300')">默认300</button>
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('cfgTableCount').value=500;showToast('已设为500')">默认500</button>
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('cfgTableCount').value=1000;showToast('已设为1000')">最大1000</button>
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">活跃操作员（只读，管理请到登录页底部）</label>
+        <input type="text" class="input" id="cfgOperators" readonly style="background:var(--n-50);color:var(--n-500);">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('configModal')">取消</button>
+      <button class="btn btn-primary" onclick="saveConfig()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast 容器 -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// HTML 转义 — 防止 XSS
+function esc(str) {
+  const div = document.createElement('div');
+  div.textContent = String(str ?? '');
+  return div.innerHTML;
+}
+
+// ============================================
+// 数据层 — LocalStorage 管理
+// ============================================
+const STORAGE_KEY = 'pindou_tables_v1';
+const CONFIG_KEY = 'pindou_config_v1';
+const LOG_PREFIX = 'pindou_logs_'; // + YYYY-MM-DD
+
+const DEFAULT_CONFIG = {
+  tableCount: 100,
+  operators: [], // 格式: [{name, status, createdAt}]  status: 'active'|'disabled'
+  autoClean: false,
+  retentionDays: 2
+};
+const CURRENT_USER_KEY = 'pindou_current_user';
+
+// ============================================
+// 操作员数据结构（数据库风格 — 软删除/字段控制）
+// { name: 'FZX', status: 'active', createdAt: '2026-06-30T...' }
+// status: 'active' → 可登录 / 'disabled' → 停用（保留记录，不可登录）
+// ============================================
+
+// 兼容旧数据迁移：字符串数组 → 对象数组
+function migrateOperators(cfg) {
+  if (!cfg.operators) cfg.operators = [];
+  // 如果是旧格式（字符串数组），转换为新格式
+  if (cfg.operators.length > 0 && typeof cfg.operators[0] === 'string') {
+    cfg.operators = cfg.operators.map(name => ({
+      name,
+      status: 'active',
+      createdAt: new Date().toISOString()
+    }));
+  }
+  return cfg;
+}
+
+// ============================================
+// 自动快照备份 — 危险操作前自动保存一份快照
+// ============================================
+const BACKUP_KEY = 'pindou_backup_v1';
+const BACKUP_TIME_KEY = 'pindou_backup_time_v1';
+const BACKUP_ACTION_KEY = 'pindou_backup_action_v1';
+
+function autoBackup(action) {
+  try {
+    const snapshot = {
+      tables: tables,
+      config: config
+    };
+    localStorage.setItem(BACKUP_KEY, JSON.stringify(snapshot));
+    localStorage.setItem(BACKUP_TIME_KEY, new Date().toISOString());
+    localStorage.setItem(BACKUP_ACTION_KEY, action || 'unknown');
+  } catch(e) {
+    console.error('自动备份失败:', e);
+  }
+}
+
+function hasBackup() {
+  try {
+    return !!localStorage.getItem(BACKUP_KEY);
+  } catch(e) {
+    return false;
+  }
+}
+
+function getBackupInfo() {
+  try {
+    const time = localStorage.getItem(BACKUP_TIME_KEY);
+    const action = localStorage.getItem(BACKUP_ACTION_KEY);
+    if (!time) return null;
+    return { time, action };
+  } catch(e) {
+    return null;
+  }
+}
+
+// ROOT 用户判断（不区分大小写）
+function isRoot() {
+  return checkAuth() && currentUser.toUpperCase() === 'ROOT';
+}
+
+function restoreFromBackup() {
+  if (!isRoot()) { showToast('只有 ROOT 用户可执行此操作', 'error'); return false; }
+  try {
+    const raw = localStorage.getItem(BACKUP_KEY);
+    if (!raw) { showToast('没有可恢复的备份', 'error'); return false; }
+    const snapshot = JSON.parse(raw);
+    if (snapshot.tables) {
+      tables = snapshot.tables;
+      saveTables(tables);
+    }
+    if (snapshot.config) {
+      config = migrateOperators({ ...DEFAULT_CONFIG, ...snapshot.config });
+      saveConfigData(config);
+    }
+    showToast('已从备份恢复', 'success');
+    return true;
+  } catch(e) {
+    showToast('备份恢复失败', 'error');
+    return false;
+  }
+}
+
+// 渲染快照备份信息（数据管理页底部）
+function renderBackupInfo() {
+  const el = document.getElementById('backupInfoSection');
+  if (!el) return;
+  if (!isRoot()) {
+    el.innerHTML = '<div style="font-size:0.8125rem;color:var(--n-400);line-height:1.6;">备份与恢复功能仅 ROOT 用户可用。</div>';
+    return;
+  }
+  const info = getBackupInfo();
+  if (!info) {
+    el.innerHTML = `
+      <div style="font-size:0.8125rem;color:var(--n-400);line-height:1.6;">
+        💡 系统会在批量设置、导入数据等操作前<strong>自动保存一份快照</strong>。如果误操作了数据，可以在这里一键恢复。
+      </div>
+    `;
+    return;
+  }
+  const dt = new Date(info.time);
+  const timeStr = dt.toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+  el.innerHTML = `
+    <div style="font-size:0.8125rem;color:var(--n-600);line-height:1.6;margin-bottom:var(--sp-2);">
+      📸 自动快照备份
+    </div>
+    <div style="font-size:0.875rem;color:var(--n-700);margin-bottom:var(--sp-2);">
+      上次备份：<strong>${timeStr}</strong>（操作：${esc(info.action)}）
+    </div>
+    <button class="btn btn-secondary btn-sm" onclick="restoreFromBackupConfirm()">↩ 从快照恢复</button>
+  `;
+}
+
+function restoreFromBackupConfirm() {
+  if (!isRoot()) { showToast('只有 ROOT 用户可执行此操作', 'error'); return; }
+  showConfirm(
+    '从快照恢复？',
+    '将用最近一次自动备份覆盖当前桌台和配置数据。此操作不可撤销，建议先导出当前数据。',
+    () => {
+      restoreFromBackup();
+      renderAll();
+    }
+  );
+}
+
+// ============================================
+// 密钥系统 — 简单哈希校验（防止明文暴露在源码中）
+// 密钥请向店长索取，勿写入源码注释
+// ============================================
+function simpleHash(str) {
+  let h = 5381;
+  for (let i = 0; i < str.length; i++) {
+    h = ((h << 5) + h) + str.charCodeAt(i);
+    h = h >>> 0; // 无符号右移，确保返回非负整数（避免 & 0xffffffff 的有符号问题）
+  }
+  return h;
+}
+// guan1234 的哈希值（非明文，打开源码看不到原始密码）
+const REG_KEY_HASH = simpleHash('guan1234');
+const ADMIN_KEY_HASH = simpleHash('guan1234');
+
+function verifyRegKey(key) {
+  return simpleHash(key) === REG_KEY_HASH;
+}
+function verifyAdminKey(key) {
+  return simpleHash(key) === ADMIN_KEY_HASH;
+}
+
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function dateStr(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function loadConfig() {
+  try {
+    const raw = localStorage.getItem(CONFIG_KEY);
+    if (raw) return { ...DEFAULT_CONFIG, ...JSON.parse(raw) };
+  } catch(e) {}
+  return { ...DEFAULT_CONFIG };
+}
+
+function saveConfigData(cfg) {
+  localStorage.setItem(CONFIG_KEY, JSON.stringify(cfg));
+}
+
+function loadTables() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      // 数据完整性校验：确保每个桌台对象的字段完整合法
+      if (parsed && typeof parsed === 'object') {
+        for (const id in parsed) {
+          const t = parsed[id];
+          if (!t || typeof t !== 'object') { delete parsed[id]; continue; }
+          // 必须有 id 和 name
+          if (!t.id) t.id = id;
+          if (!t.name) t.name = id;
+          // status 合法性
+          if (t.status !== 'idle' && t.status !== 'active') t.status = 'idle';
+          // extensions 必须是数组
+          if (!Array.isArray(t.extensions)) t.extensions = [];
+          // 数值字段校验
+          if (typeof t.durationHours !== 'number' || isNaN(t.durationHours)) t.durationHours = 0;
+          // isFullDay 字段校验（老数据兼容）
+          if (typeof t.isFullDay !== 'boolean') t.isFullDay = false;
+          // 时间字段一致性（全天桌台不需要 endTime）
+          if (t.status === 'active' && !t.isFullDay && (!t.startTime || !t.endTime)) {
+            t.status = 'idle'; t.startTime = null; t.endTime = null;
+          }
+        }
+        return parsed;
+      }
+    }
+  } catch(e) {
+    console.error('加载桌台数据失败:', e);
+  }
+  return {};
+}
+
+function saveTables(tables) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(tables));
+    _lastSaveOK = true;
+  } catch(e) {
+    _lastSaveOK = false;
+    if (e.name === 'QuotaExceededError') {
+      showToast('存储空间不足，请清理历史数据', 'error');
+    } else {
+      console.error('保存桌台数据失败:', e);
+    }
+  }
+}
+let _lastSaveOK = true;
+
+function saveLogs(date, logs) {
+  try {
+    localStorage.setItem(LOG_PREFIX + date, JSON.stringify(logs));
+  } catch(e) {
+    if (e.name === 'QuotaExceededError') {
+      showToast('存储空间不足，请清理历史数据', 'error');
+    }
+    console.error('保存日志失败:', e);
+  }
+}
+
+function loadLogs(date) {
+  try {
+    const raw = localStorage.getItem(LOG_PREFIX + date);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return [];
+}
+
+// addLog 使用上方已定义的 saveLogs
+function addLog(action, data) {
+  const date = todayStr();
+  const logs = loadLogs(date);
+  logs.push({
+    time: new Date().toISOString(),
+    action,
+    ...data
+  });
+  saveLogs(date, logs);
+}
+
+// 获取所有日志日期
+function getAllLogDates() {
+  const dates = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith(LOG_PREFIX)) {
+      dates.push(key.replace(LOG_PREFIX, ''));
+    }
+  }
+  return dates.sort().reverse();
+}
+
+// ============================================
+// 状态管理
+// ============================================
+let config = migrateOperators(loadConfig());
+let tables = loadTables();
+let selectedDuration = 0;
+let selectedFullDay = false;
+let currentFilter = { status: 'all', duration: 'all' };
+let currentUser = null; // 当前登录操作员
+let audioCtx = null; // 音频上下文（提前声明，避免 TDZ）
+let audioReady = false; // 是否已获得用户手势（Chrome 自动播放策略要求）
+let alertedTables = new Set(); // 记录已提醒过的桌台（提前声明，避免 TDZ）
+
+// ============================================
+// 登录/登出
+// ============================================
+function getInitial(name) {
+  return (name || '?').charAt(0).toUpperCase();
+}
+
+function loadCurrentUser() {
+  try {
+    const raw = localStorage.getItem(CURRENT_USER_KEY);
+    if (raw) return raw;
+  } catch(e) {}
+  return null;
+}
+
+function saveCurrentUser(name) {
+  localStorage.setItem(CURRENT_USER_KEY, name);
+}
+
+function clearCurrentUser() {
+  localStorage.removeItem(CURRENT_USER_KEY);
+}
+
+function renderLoginScreen() {
+  const container = document.getElementById('loginOperators');
+  const noHint = document.getElementById('noOperatorHint');
+  const subText = document.getElementById('loginSubText');
+
+  if (getActiveOperators().length === 0) {
+    container.innerHTML = '';
+    noHint.style.display = 'block';
+    subText.textContent = '首次使用，请注册操作员';
+  } else {
+    noHint.style.display = 'none';
+    subText.textContent = '选择操作员登录';
+    container.innerHTML = getActiveOperators().map(op => `
+      <button class="login-op-btn" onclick="login('${esc(op.name)}')">
+        <div class="login-op-avatar">${esc(getInitial(op.name))}</div>
+        <span>${esc(op.name)}</span>
+        <span class="login-op-role">操作员</span>
+      </button>
+    `).join('');
+  }
+}
+
+function login(name) {
+  currentUser = name;
+  saveCurrentUser(name);
+
+  // 注册操作员（新增或重新激活）
+  addOperator(name);
+
+  // 在用户交互中初始化音频上下文（移动端必须，否则播放不出声音）
+  initAudio();
+
+  // 更新 UI
+  document.getElementById('loginOverlay').style.display = 'none';
+  document.getElementById('userBar').style.display = 'flex';
+  document.getElementById('userName').textContent = name;
+  document.getElementById('userAvatar').textContent = getInitial(name);
+
+  renderAll();
+  showToast(`欢迎回来，${name}`, 'success');
+}
+
+function loginAsNew() {
+  const input = document.getElementById('loginNewName');
+  const keyInput = document.getElementById('loginRegKey');
+  const rawName = input.value.trim();
+  const key = keyInput.value.trim();
+
+  // 输入校验
+  if (!rawName) {
+    showToast('请输入操作员名字', 'error');
+    input.focus();
+    return;
+  }
+
+  // 名字清洗：去首尾空格、合并连续空格、限制 2-12 字符
+  const name = rawName.replace(/\s+/g, ' ').trim();
+  if (name.length < 1 || name.length > 12) {
+    showToast('名字长度需 1-12 个字符', 'error');
+    input.focus();
+    return;
+  }
+
+  // 禁止特殊字符（只允许中英文、数字、下划线）
+  if (!/^[\u4e00-\u9fa5a-zA-Z0-9_]+$/.test(name)) {
+    showToast('名字只能包含中英文、数字、下划线', 'error');
+    input.focus();
+    return;
+  }
+
+  if (!key) {
+    showToast('请输入注册密钥', 'error');
+    keyInput.focus();
+    return;
+  }
+  if (!verifyRegKey(key)) {
+    showToast('注册密钥错误，请向店长获取', 'error');
+    keyInput.value = '';
+    keyInput.focus();
+    return;
+  }
+
+  // 重名检查
+  const existing = config.operators.find(o => o.name === name);
+  if (existing) {
+    if (existing.status === 'active') {
+      showToast(`「${name}」已存在且处于活跃状态，请直接登录或换个名字`, 'error');
+      input.focus();
+      return;
+    } else {
+      // 已停用的同名操作员 → 提示是否重新启用
+      showConfirm(
+        `操作员「${name}」已存在（已停用）`,
+        `是否重新启用该操作员？历史记录将保留。`,
+        () => {
+          login(name);
+          input.value = '';
+          keyInput.value = '';
+          showToast(`「${name}」已重新启用`, 'success');
+        }
+      );
+      return;
+    }
+  }
+
+  // 通过所有检查，注册并登录
+  login(name);
+  input.value = '';
+  keyInput.value = '';
+  showToast('注册成功', 'success');
+}
+
+// ============================================
+// 停用系统 — 清除所有操作员登录信息（数据保留）
+// ============================================
+function openRevokeModal() {
+  document.getElementById('revokeModal').classList.add('show');
+  document.getElementById('revokeKey').value = '';
+  // 重置为未验证状态
+  document.getElementById('revokeAuthSection').style.display = 'block';
+  document.getElementById('revokeList').style.display = 'none';
+}
+
+// 重新锁定（隐藏列表，显示密钥输入）
+function resetRevokeAuth() {
+  document.getElementById('revokeAuthSection').style.display = 'block';
+  document.getElementById('revokeList').style.display = 'none';
+  document.getElementById('revokeKey').value = '';
+}
+
+// 渲染停用面板的操作员列表
+function renderRevokeList() {
+  const listEl = document.getElementById('revokeOpList');
+  if (!listEl) return;
+  const allOps = getAllOperators();
+  if (allOps.length === 0) {
+    listEl.innerHTML = '<div style="text-align:center;padding:var(--sp-4);color:var(--n-400);">暂无操作员</div>';
+    return;
+  }
+
+  // 分组：活跃的在上，已停用的在下
+  const activeOps = allOps.filter(op => op.status === 'active');
+  const disabledOps = allOps.filter(op => op.status === 'disabled');
+
+  let html = '';
+
+  // 活跃操作员
+  if (activeOps.length > 0) {
+    html += `<div style="font-size:0.75rem;color:var(--n-400);font-weight:600;margin-bottom:var(--sp-2);text-transform:uppercase;letter-spacing:0.05em;">活跃操作员（${activeOps.length}）</div>`;
+    html += activeOps.map(op => {
+      const isCurrent = op.name === currentUser;
+      return `
+        <div style="display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-3);border:1px solid var(--n-200);border-radius:var(--r-md);margin-bottom:var(--sp-2);">
+          <div class="login-op-avatar" style="width:36px;height:36px;font-size:1rem;">${esc(getInitial(op.name))}</div>
+          <div style="flex:1;">
+            <span style="font-weight:600;color:var(--n-700);">${esc(op.name)}</span>
+            ${isCurrent ? '<span style="font-size:0.75rem;color:var(--c-primary);font-weight:600;margin-left:4px;">（当前登录）</span>' : ''}
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="disableOp('${esc(op.name)}')">停用</button>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // 已停用操作员
+  if (disabledOps.length > 0) {
+    html += `<div style="font-size:0.75rem;color:var(--n-400);font-weight:600;margin:var(--sp-4) 0 var(--sp-2);text-transform:uppercase;letter-spacing:0.05em;">已停用（${disabledOps.length}）</div>`;
+    html += disabledOps.map(op => {
+      const isCurrent = op.name === currentUser;
+      return `
+        <div style="display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-3);border:1px solid var(--n-200);border-radius:var(--r-md);margin-bottom:var(--sp-2);opacity:0.6;">
+          <div class="login-op-avatar" style="width:36px;height:36px;font-size:1rem;background:var(--n-200);color:var(--n-500);">${esc(getInitial(op.name))}</div>
+          <div style="flex:1;">
+            <span style="font-weight:600;color:var(--n-500);">${esc(op.name)}</span>
+            ${isCurrent ? '<span style="font-size:0.75rem;color:var(--c-primary);font-weight:600;margin-left:4px;">（当前登录）</span>' : ''}
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="enableOp('${esc(op.name)}')">启用</button>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // 底部停用全部
+  html += `
+    <div style="margin-top:var(--sp-4);padding-top:var(--sp-3);border-top:2px dashed var(--n-200);">
+      <button class="btn btn-danger" style="width:100%;" onclick="disableAllOps()">⚠ 一键停用全部操作员</button>
+      <div style="text-align:center;margin-top:var(--sp-2);font-size:0.75rem;color:var(--n-400);">停用后所有操作员需重新验证密钥登录，数据完整保留</div>
+    </div>
+  `;
+
+  listEl.innerHTML = html;
+}
+
+function doRevokeAll() {
+  const key = document.getElementById('revokeKey').value.trim();
+  if (!key) {
+    showToast('请输入管理密钥', 'error');
+    return;
+  }
+  if (!verifyAdminKey(key)) {
+    showToast('管理密钥错误', 'error');
+    document.getElementById('revokeKey').value = '';
+    return;
+  }
+
+  // 密钥正确，切换到操作员管理列表
+  document.getElementById('revokeAuthSection').style.display = 'none';
+  document.getElementById('revokeList').style.display = 'block';
+  renderRevokeList();
+}
+
+// 停用单个操作员
+function disableOp(name) {
+  if (!checkAuth()) { showToast('请先登录操作员', 'error'); return; }
+  if (!isActiveOperator(name)) { showToast('该操作员已被停用', 'error'); return; }
+  disableOperator(name);
+  if (currentUser === name) {
+    currentUser = null;
+    clearCurrentUser();
+    document.getElementById('loginOverlay').style.display = 'flex';
+    document.getElementById('userBar').style.display = 'none';
+    document.getElementById('revokeModal').classList.remove('show');
+    renderLoginScreen();
+    showToast(`已停用「${name}」并退出登录`, 'success');
+  } else {
+    renderRevokeList();
+    showToast(`已停用「${name}」`, 'success');
+  }
+}
+
+// 启用操作员
+function enableOp(name) {
+  if (!checkAuth()) { showToast('请先登录操作员', 'error'); return; }
+  addOperator(name); // 重新激活
+  renderRevokeList();
+  renderLoginScreen();
+  showToast(`已启用「${name}」`, 'success');
+}
+
+// 停用全部
+function disableAllOps() {
+  if (!checkAuth()) { showToast('请先登录操作员', 'error'); return; }
+  // 停用全部是高危操作，保留确认弹窗
+  showConfirm(
+    '停用全部操作员？',
+    '所有操作员将被停用，系统回到登录页。桌台数据和操作日志完全保留。可以随时重新启用或用密钥注册新操作员。',
+    () => {
+      disableAllOperators();
+      currentUser = null;
+      clearCurrentUser();
+      document.getElementById('loginOverlay').style.display = 'flex';
+      document.getElementById('userBar').style.display = 'none';
+      document.getElementById('revokeModal').classList.remove('show');
+      renderLoginScreen();
+      showToast('已停用全部操作员', 'success');
+    }
+  );
+}
+
+// ============================================
+// 切换操作员（在任意页面可切换，不丢数据）
+// ============================================
+function openSwitchModal() {
+  if (!checkAuth()) { showToast('请先登录操作员', 'error'); return; }
+  const body = document.getElementById('switchModalBody');
+
+  let html = `
+    <div style="display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-3);background:var(--c-primary-bg);border-radius:var(--r-md);margin-bottom:var(--sp-4);">
+      <div class="user-avatar" style="width:48px;height:48px;font-size:1.25rem;">${esc(getInitial(currentUser))}</div>
+      <div>
+        <div style="font-size:0.75rem;color:var(--n-500);">当前登录</div>
+        <div style="font-size:1.25rem;font-weight:800;color:var(--c-primary-dark);">${esc(currentUser)}</div>
+      </div>
+    </div>
+  `;
+
+  // 其他操作员列表（仅活跃的）
+  const otherOps = getActiveOperators().filter(op => op.name !== currentUser);
+  if (otherOps.length > 0) {
+    html += `<div class="field-label" style="margin-bottom:var(--sp-2);">切换到其他操作员</div>`;
+    html += otherOps.map(op => `
+      <button class="login-op-btn" style="width:100%;margin-bottom:var(--sp-2);border-width:1px;" onclick="switchOperator('${esc(op.name)}')">
+        <div class="login-op-avatar" style="width:36px;height:36px;font-size:1rem;">${esc(getInitial(op.name))}</div>
+        <span>${esc(op.name)}</span>
+      </button>
+    `).join('');
+  } else {
+    html += `<div style="text-align:center;padding:var(--sp-3);color:var(--n-400);font-size:0.875rem;">没有其他操作员</div>`;
+  }
+
+  html += `
+    <div style="margin-top:var(--sp-4);display:flex;flex-direction:column;gap:var(--sp-2);">
+      <button class="btn btn-secondary" onclick="closeModal('switchModal');openRevokeModal();">⚙ 操作员管理（停用/启用）</button>
+      <button class="btn btn-ghost" onclick="closeModal('switchModal');logout()">登出当前操作员</button>
+    </div>
+  `;
+
+  body.innerHTML = html;
+  document.getElementById('switchModal').classList.add('show');
+}
+
+function switchOperator(name) {
+  if (!checkAuth()) { showToast('请先登录操作员', 'error'); return; }
+  if (!isActiveOperator(name)) { showToast('该操作员已被停用', 'error'); return; }
+  currentUser = name;
+  saveCurrentUser(name);
+  document.getElementById('userName').textContent = name;
+  document.getElementById('userAvatar').textContent = getInitial(name);
+  closeModal('switchModal');
+  renderAll();
+  showToast(`已切换到 ${name}`, 'success');
+}
+
+function logout() {
+  const name = currentUser;
+  currentUser = null;
+  clearCurrentUser();
+  document.getElementById('loginOverlay').style.display = 'flex';
+  document.getElementById('userBar').style.display = 'none';
+  renderLoginScreen();
+  showToast(`「${name}」已登出`, '');
+}
+
+// 初始化桌台数据（只创建缺失的）
+function initTables() {
+  let changed = false;
+  // 只补齐缺失的桌台，绝不删除已有桌台数据
+  for (let i = 1; i <= config.tableCount; i++) {
+    const id = String(i);
+    if (!tables[id]) {
+      tables[id] = createIdleTable(id);
+      changed = true;
+    } else {
+      // 修复缺失字段（数据完整性校验）
+      const t = tables[id];
+      let repaired = false;
+      const defaults = createIdleTable(id);
+      for (const key of Object.keys(defaults)) {
+        if (t[key] === undefined || t[key] === null) {
+          if (key !== 'id' && key !== 'name') {
+            t[key] = defaults[key];
+            repaired = true;
+          }
+        }
+      }
+      // extensions 必须是数组
+      if (!Array.isArray(t.extensions)) { t.extensions = []; repaired = true; }
+      // status 必须合法
+      if (t.status !== 'idle' && t.status !== 'active') { t.status = 'idle'; repaired = true; }
+      // 有 startTime 但缺 endTime，或反过来，重置为 idle
+      if ((t.startTime && !t.endTime) || (!t.startTime && t.endTime)) {
+        t.status = 'idle'; t.startTime = null; t.endTime = null;
+        t.durationHours = 0; t.operator = null; t.extensions = []; t.sessionId = null;
+        repaired = true;
+      }
+      // active 状态但时间已过很久且无 endTime — 数据异常，重置（全天桌台除外）
+      if (t.status === 'active' && !t.endTime && !t.isFullDay) {
+        t.status = 'idle'; t.startTime = null;
+        repaired = true;
+      }
+      // isFullDay 字段补全
+      if (t.isFullDay === undefined) { t.isFullDay = false; repaired = true; }
+      if (repaired) changed = true;
+    }
+  }
+  // 注意：不再删除超出范围的桌台！
+  // 之前的行为：减少桌数时删除空闲桌 → 会误删数据
+  // 现在：只隐藏不删除（saveConfigData 保存 tableCount 控制显示范围）
+  if (changed) saveTables(tables);
+}
+
+// 创建空闲桌台的工厂函数 — 统一数据结构
+function createIdleTable(id) {
+  return {
+    id: String(id),
+    name: String(id),
+    status: 'idle',
+    startTime: null,
+    endTime: null,
+    durationHours: 0,
+    operator: null,
+    extensions: [],
+    sessionId: null,
+    isFullDay: false
+  };
+}
+
+// ============================================
+// 计算桌台状态（根据时间）
+// ============================================
+function getTableState(table) {
+  if (table.status === 'idle') return 'idle';
+  // 全天桌台：永远是 active，不会有到期/超时
+  if (table.isFullDay) return 'active';
+
+  const now = Date.now();
+  const endTime = new Date(table.endTime).getTime();
+
+  if (now < endTime) {
+    const remaining = endTime - now;
+    if (remaining <= 10 * 60 * 1000) return 'warn'; // ≤10分钟
+    return 'active';
+  } else {
+    const overTime = now - endTime;
+    if (overTime > 10 * 60 * 1000) return 'overtime'; // 超10分钟+
+    return 'expired';
+  }
+}
+
+function getRemainingTime(table) {
+  if (table.status === 'idle') return '--:--';
+  if (table.isFullDay) return '全天';
+  const now = Date.now();
+  const endTime = new Date(table.endTime).getTime();
+  const diff = endTime - now;
+  const absDiff = Math.abs(diff);
+
+  const hours = Math.floor(absDiff / 3600000);
+  const mins = Math.floor((absDiff % 3600000) / 60000);
+  const secs = Math.floor((absDiff % 60000) / 1000);
+
+  const hh = hours > 0 ? hours + ':' : '';
+  const mm = String(mins).padStart(2, '0');
+  const ss = String(secs).padStart(2, '0');
+
+  const timeStr = hh + mm + ':' + ss;
+  // 负数表示已超时，用"超"前缀避免误读为剩余时间
+  return diff < 0 ? '超 ' + timeStr : timeStr;
+}
+
+// ============================================
+// 渲染：顶部统计
+// ============================================
+function renderStats() {
+  let idle = 0, active = 0, warn = 0, expired = 0, overtime = 0;
+
+  for (const id in tables) {
+    const num = parseInt(id);
+    if (num > config.tableCount) continue; // 只统计范围内的桌台
+    const t = tables[id];
+    const state = getTableState(t);
+    if (state === 'idle') idle++;
+    else if (state === 'active') active++;
+    else if (state === 'warn') warn++;
+    else if (state === 'expired') expired++;
+    else if (state === 'overtime') overtime++;
+  }
+
+  // 使用中 = 正常使用 + 即将到期（都是在用，预警不算到期）
+  const inUse = active + warn;
+  const stats = { idle, active: inUse, warn, expired, overtime };
+
+  const strip = document.getElementById('statsStrip');
+
+  // 如果结构不存在或数量变了，更新；否则只更新数字
+  const chips = strip.querySelectorAll('.stat-chip');
+  if (chips.length !== 5) {
+    // 首次渲染结构
+    const chipDefs = [
+      { key: 'idle', label: '空闲', color: 'var(--s-idle)', filterData: { status: 'idle' } },
+      { key: 'active', label: '使用中', color: 'var(--s-active)', filterData: { status: 'active' } },
+      { key: 'warn', label: '即将到期', color: 'var(--s-warn)', filterData: { status: 'warn' } },
+      { key: 'expired', label: '已到期', color: 'var(--s-expired)', filterData: { status: 'expired' } },
+      { key: 'overtime', label: '超时', color: 'var(--s-overtime)', filterData: { status: 'overtime' } },
+    ];
+    strip.innerHTML = chipDefs.map(c => `
+      <div class="stat-chip" onclick="jumpToFilter(${JSON.stringify(c.filterData).replace(/"/g, '&quot;')})">
+        <span class="chip-dot" style="background:${c.color}"></span>
+        <span>${c.label}</span>
+        <span class="chip-val" data-stat="${c.key}">${stats[c.key]}</span>
+      </div>
+    `).join('');
+  } else {
+    // 只更新变化的数字（避免不必要的 DOM 操作导致移动端闪烁）
+    if (!strip._lastStats) strip._lastStats = {};
+    for (const chip of chips) {
+      const valEl = chip.querySelector('.chip-val');
+      const key = valEl.dataset.stat;
+      const newVal = stats[key];
+      if (strip._lastStats[key] !== newVal) {
+        valEl.textContent = newVal;
+        strip._lastStats[key] = newVal;
+      }
+    }
+  }
+}
+
+function jumpToFilter(filterData) {
+  if (!checkAuth()) { showToast('请先登录操作员', 'error'); return; }
+  switchPage('filter');
+
+  // 重置筛选条件
+  currentFilter = { status: 'all', duration: 'all' };
+  // 应用跳转带来的筛选
+  for (const k in filterData) {
+    currentFilter[k] = filterData[k];
+  }
+
+  // 同步所有 pill 状态
+  document.querySelectorAll('.pill').forEach(p => {
+    const f = p.dataset.filter;
+    const v = p.dataset.val;
+    if (currentFilter[f] === v) {
+      p.classList.add('active');
+    } else {
+      p.classList.remove('active');
+    }
+  });
+  renderFilterGrid();
+}
+
+// ============================================
+// 渲染：桌台卡片
+// ============================================
+// 格式化时长显示（如 1.5 → "1h30m"，0.5 → "30m"）
+function formatDuration(hours) {
+  if (hours === 0) return '0m';
+  const h = Math.floor(hours);
+  const m = Math.round((hours - h) * 60);
+  if (h > 0 && m > 0) return `${h}h${m}m`;
+  if (h > 0) return `${h}h`;
+  return `${m}m`;
+}
+
+function renderTableCard(table) {
+  const state = getTableState(table);
+  const remaining = table.status === 'idle' ? '空闲' : getRemainingTime(table);
+  const startTime = table.startTime
+    ? new Date(table.startTime).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+    : '--:--';
+
+  const statusLabels = {
+    idle: '空闲', active: '使用中', warn: '即将到期',
+    expired: '已到期', overtime: '超时'
+  };
+
+  const hasExtension = table.extensions && table.extensions.length > 0;
+  const extBadge = hasExtension ? `<div class="tcard-extend-badge">续${table.extensions.length}</div>` : '';
+
+  const durBadge = table.status !== 'idle'
+    ? `<span class="tcard-duration">${table.isFullDay ? '全天' : formatDuration(table.durationHours)}</span>`
+    : '';
+
+  return `
+    <div class="tcard ${state}" onclick="openActionModal('${table.id}')">
+      ${extBadge}
+      <div class="tcard-head">
+        <div class="tcard-num">${esc(table.name)}</div>
+        <div class="tcard-status">${statusLabels[state]}</div>
+      </div>
+      <div class="tcard-time">${table.status !== 'idle' ? '从 ' + startTime + ' 开始' : '点击开台'}</div>
+      <div class="tcard-remain numeric">${remaining}</div>
+      <div class="tcard-foot">
+        ${durBadge}
+        ${table.operator ? `<span>${esc(table.operator)}</span>` : ''}
+      </div>
+    </div>
+  `;
+}
+
+function renderTables() {
+  const grid = document.getElementById('tableGrid');
+  const allIds = Object.keys(tables).map(Number).filter(n => !isNaN(n)).sort((a,b) => a - b);
+  const ids = allIds.filter(n => n <= config.tableCount).map(String);
+
+  if (ids.length === 0) {
+    grid.innerHTML = '<div class="empty"><div class="empty-icon">🪑</div><div class="empty-title">暂无桌台</div><div class="empty-desc">点击"添加桌台"开始使用</div></div>';
+    return;
+  }
+
+  grid.innerHTML = ids.map(id => renderTableCard(tables[id])).join('');
+  document.getElementById('tablesTitle').textContent = `桌台总览（共 ${ids.length} 桌）`;
+}
+
+function addOneTable() {
+  if (!checkAuth()) {
+    showToast('请先登录操作员', 'error');
+    return;
+  }
+  // 找当前最大桌号 +1
+  const ids = Object.keys(tables).map(Number).filter(n => !isNaN(n));
+  let nextNum = 1;
+  if (ids.length > 0) {
+    let maxId = Math.max(...ids);
+    nextNum = maxId + 1;
+  }
+
+  const id = String(nextNum);
+  tables[id] = createIdleTable(id);
+  config.tableCount = Math.max(config.tableCount, nextNum);
+  saveConfigData(config);
+  saveTables(tables);
+
+  renderAll();
+  showToast(`已添加 ${nextNum} 号桌`, 'success');
+
+  // 自动滚动到底部
+  setTimeout(() => {
+    const grid = document.getElementById('tableGrid');
+    grid.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 100);
+}
+
+// ============================================
+// 渲染：筛选页网格
+// ============================================
+function renderFilterGrid() {
+  const grid = document.getElementById('filterGrid');
+  const ids = Object.keys(tables).map(Number).filter(n => !isNaN(n) && n <= config.tableCount).sort((a,b) => a - b).map(String);
+
+  const filtered = ids.filter(id => {
+    const t = tables[id];
+    const state = getTableState(t);
+
+    // 状态筛选
+    if (currentFilter.status === 'idle' && state !== 'idle') return false;
+    if (currentFilter.status === 'active' && state !== 'active' && state !== 'warn') return false;
+    if (currentFilter.status === 'warn' && state !== 'warn') return false;
+    if (currentFilter.status === 'expired' && state !== 'expired') return false;
+    if (currentFilter.status === 'overtime' && state !== 'overtime') return false;
+
+    // 时长筛选（按向下取整匹配 pill，如 1.5h 归到 1h）
+    if (currentFilter.duration !== 'all') {
+      if (t.status === 'idle') return false;
+      const floorH = Math.floor(t.durationHours);
+      if (currentFilter.duration === '7+') {
+        if (floorH < 7) return false;
+      } else {
+        if (String(floorH) !== currentFilter.duration) return false;
+      }
+    }
+
+    return true;
+  });
+
+  const title = document.getElementById('filterResultTitle');
+  title.textContent = `筛选结果（${filtered.length} / ${ids.length} 桌）`;
+
+  if (filtered.length === 0) {
+    grid.innerHTML = '<div class="empty" style="grid-column:1/-1;"><div class="empty-icon">🔍</div><div class="empty-title">没有匹配的桌台</div><div class="empty-desc">尝试调整筛选条件</div></div>';
+    return;
+  }
+
+  grid.innerHTML = filtered.map(id => renderTableCard(tables[id])).join('');
+}
+
+// ============================================
+// 渲染：图表页
+// ============================================
+function renderCharts() {
+  // === 日期选择器填充 ===
+  const dateSelect = document.getElementById('chartDate');
+  const dates = getAllLogDates();
+  const today = todayStr();
+  if (!dates.includes(today)) dates.unshift(today);
+  dates.sort((a,b) => b.localeCompare(a)); // 最近日期在前
+  const currentDate = dateSelect.value || today;
+  dateSelect.innerHTML = dates.map(d => `<option value="${d}">${d}${d === today ? '（今天）' : ''}</option>`).join('');
+  dateSelect.value = dates.includes(currentDate) ? currentDate : today;
+  const selectedDate = dateSelect.value;
+
+  // === 1. 环形图：当前桌台实时状态分布（不受日期影响） ===
+  let idle = 0, active = 0, warn = 0, expired = 0, overtime = 0;
+  for (const id in tables) {
+    const num = parseInt(id);
+    if (num > config.tableCount) continue;
+    const t = tables[id];
+    const state = getTableState(t);
+    if (state === 'idle') idle++;
+    else if (state === 'active') active++;
+    else if (state === 'warn') warn++;
+    else if (state === 'expired') expired++;
+    else if (state === 'overtime') overtime++;
+  }
+  const total = idle + active + warn + expired + overtime;
+  const inUse = active + warn;
+
+  const segments = [
+    { label: '空闲', val: idle, color: 'var(--s-idle)', filter: { status: 'idle' } },
+    { label: '使用中', val: active, color: 'var(--s-active)', filter: { status: 'active' } },
+    { label: '即将到期', val: warn, color: 'var(--s-warn)', filter: { status: 'warn' } },
+    { label: '已到期', val: expired, color: 'var(--s-expired)', filter: { status: 'expired' } },
+    { label: '超时10min+', val: overtime, color: 'var(--s-overtime)', filter: { status: 'overtime' } },
+  ].filter(s => s.val > 0);
+
+  const donutEl = document.getElementById('donutChart');
+  if (segments.length === 0 || total === 0) {
+    donutEl.innerHTML = '<div class="empty"><div class="empty-title">暂无数据</div></div>';
+  } else {
+    let cumAngle = 0;
+    const r = 70;
+    const cx = 100, cy = 100;
+    const circumference = 2 * Math.PI * r;
+    let arcs = '';
+    for (const seg of segments) {
+      const fraction = seg.val / total;
+      const dashLen = fraction * circumference;
+      const gap = circumference - dashLen;
+      const rotation = (cumAngle / total) * 360 - 90;
+      arcs += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${seg.color}" stroke-width="30" stroke-dasharray="${dashLen} ${gap}" stroke-dashoffset="0" transform="rotate(${rotation} ${cx} ${cy})" style="cursor:pointer;transition:opacity 0.2s" onclick='jumpToFilter(${JSON.stringify(seg.filter)})' onmouseover="this.style.opacity=0.7" onmouseout="this.style.opacity=1"/>`;
+      cumAngle += seg.val;
+    }
+    donutEl.innerHTML = `
+      <div class="chart-wrap">
+        <div class="donut-wrap">
+          <svg width="200" height="200" viewBox="0 0 200 200">
+            ${arcs}
+          </svg>
+          <div class="donut-center">
+            <div class="donut-center-num">${total}</div>
+            <div class="donut-center-label">总桌数</div>
+          </div>
+        </div>
+        <div class="chart-legend">
+          ${segments.map(s => `
+            <div class="legend-item" onclick='jumpToFilter(${JSON.stringify(s.filter)})'>
+              <span class="legend-dot" style="background:${s.color}"></span>
+              <span>${s.label}</span>
+              <span class="legend-val">${s.val}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  // === 2. 柱状图：按选定日期的开台记录统计时长分布 ===
+  const dayLogs = loadLogs(selectedDate);
+  const durMap = {}; // 从开台日志统计时长
+  let dayStart = 0, dayExtend = 0, dayClear = 0;
+  for (const log of dayLogs) {
+    if (log.action === 'start') {
+      dayStart++;
+      // 全天桌台不计入时长分布柱状图（无明确时长，归入会误导）
+      if (log.isFullDay) continue;
+      // 用 Math.floor 归类到整数小时桶，与筛选页 pill 一致
+      const h = Math.floor(log.durationHours || 1);
+      durMap[h] = (durMap[h] || 0) + 1;
+    } else if (log.action === 'extend') {
+      dayExtend++;
+    } else if (log.action === 'clear') {
+      dayClear++;
+    }
+  }
+
+  const barEl = document.getElementById('barChart');
+  const barColors = ['var(--s-active)', 'var(--c-primary)', 'var(--s-warn)', 'var(--s-expired)', 'var(--s-overtime)', 'var(--c-info)', 'var(--c-success)', 'var(--n-400)', 'var(--n-500)', 'var(--n-600)', 'var(--c-primary-dark)', 'var(--c-danger)'];
+  const sortedDurs = Object.keys(durMap).map(Number).sort((a,b) => a - b);
+  const barData = [];
+  for (const h of sortedDurs) {
+    if (h >= 7) {
+      const last = barData[barData.length - 1];
+      if (last && last.filter.duration === '7+') {
+        last.val += durMap[h];
+      } else {
+        barData.push({ label: '7h+', val: durMap[h], filter: { duration: '7+' } });
+      }
+    } else {
+      barData.push({ label: h + ' 小时', val: durMap[h], filter: { duration: String(h) } });
+    }
+  }
+  const maxDur = Math.max(...barData.map(b => b.val), 1);
+
+  if (barData.length === 0) {
+    barEl.innerHTML = `<div class="empty"><div class="empty-title">${selectedDate} 无开台记录</div></div>`;
+  } else {
+    barEl.innerHTML = `
+      <div style="display:flex;align-items:flex-end;gap:var(--sp-3);height:180px;padding:0 var(--sp-4);overflow-x:auto;">
+        ${barData.map((b, i) => `
+          <div style="flex:0 0 auto;min-width:60px;display:flex;flex-direction:column;align-items:center;cursor:pointer;height:100%;justify-content:flex-end;" onclick='jumpToFilter(${JSON.stringify(b.filter)})'>
+            <span style="font-size:1.5rem;font-weight:800;font-variant-numeric:tabular-nums;color:var(--n-700);margin-bottom:var(--sp-1);">${b.val}</span>
+            <div style="width:60%;height:${(b.val/maxDur)*120}px;background:${barColors[i % barColors.length]};border-radius:8px 8px 0 0;transition:height 0.3s var(--ease-out);min-height:4px;"></div>
+            <span style="font-size:0.875rem;color:var(--n-500);margin-top:var(--sp-2);">${b.label}</span>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  // === 3. 运营概览：按选定日期统计 ===
+  document.getElementById('summaryTitle').textContent = selectedDate === today ? '今日运营概览' : `${selectedDate} 运营概览`;
+  const sumEl = document.getElementById('todaySummary');
+  const isToday = selectedDate === today;
+  const sumCards = [
+    { label: '开台次数', val: dayStart, color: 'var(--s-active)' },
+    { label: '续时次数', val: dayExtend, color: 'var(--c-primary)' },
+    { label: '清桌次数', val: dayClear, color: 'var(--n-400)' },
+    { label: '当前在用', val: isToday ? inUse : '—', color: 'var(--c-info)' },
+    { label: '当前空闲', val: isToday ? idle : '—', color: 'var(--s-idle)' },
+  ];
+  sumEl.innerHTML = sumCards.map(s => `
+    <div class="sum-card" style="border-color:${s.color}">
+      <div class="sum-label">${s.label}</div>
+      <div class="sum-val" style="color:${s.color}">${s.val}</div>
+    </div>
+  `).join('');
+}
+
+// ============================================
+// 渲染：日志页
+// ============================================
+function renderLogs() {
+  // 填充操作员下拉
+  const opSelect = document.getElementById('logOperator');
+  const currentOp = opSelect.value || currentUser || '';
+  opSelect.innerHTML = '<option value="">全部操作员</option>' +
+    getActiveOperatorNames().map(o => `<option value="${o}" ${o === currentUser ? 'style="font-weight:700"' : ''}>${o}${o === currentUser ? '（当前）' : ''}</option>`).join('');
+  opSelect.value = currentOp;
+
+  // 填充日期下拉
+  const dateSelect = document.getElementById('logDate');
+  const currentDate = dateSelect.value;
+  const dates = getAllLogDates();
+  dateSelect.innerHTML = '<option value="">全部日期</option>' +
+    dates.map(d => `<option value="${d}">${d}</option>`).join('');
+  dateSelect.value = currentDate;
+
+  const filterOp = opSelect.value;
+  const filterDate = dateSelect.value;
+  const filterAction = document.getElementById('logAction').value;
+
+  // 收集日志
+  let allLogs = [];
+  const datesToLoad = filterDate ? [filterDate] : dates;
+  for (const d of datesToLoad) {
+    const logs = loadLogs(d);
+    for (const log of logs) {
+      allLogs.push({ ...log, dateStr: d });
+    }
+  }
+
+  // 排序：最新的在前
+  allLogs.sort((a, b) => new Date(b.time) - new Date(a.time));
+
+  // 筛选
+  let filtered = allLogs;
+  if (filterOp) filtered = filtered.filter(l => l.operator === filterOp);
+  if (filterAction) filtered = filtered.filter(l => l.action === filterAction);
+
+  const list = document.getElementById('logList');
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="log-empty">暂无日志记录</div>';
+    return;
+  }
+
+  const actionLabels = { start: '开台', extend: '续时', clear: '清桌', modify: '修改' };
+
+  list.innerHTML = filtered.slice(0, 200).map(log => {
+    const t = new Date(log.time);
+    const timeStr = t.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+    const actionClass = log.action;
+    const actionText = actionLabels[log.action] || log.action;
+
+    let desc = '';
+    if (log.action === 'start') {
+      desc = `<strong>${esc(log.operator)}</strong> 开台 <strong>${esc(log.tableName)}</strong> · ${log.durationHours}小时`;
+    } else if (log.action === 'extend') {
+      desc = `<strong>${esc(log.operator)}</strong> 续时 <strong>${esc(log.tableName)}</strong> · +${log.extendHours}小时`;
+    } else if (log.action === 'clear') {
+      desc = `<strong>${esc(log.operator)}</strong> 清桌 <strong>${esc(log.tableName)}</strong>`;
+    } else if (log.action === 'modify') {
+      desc = `<strong>${esc(log.operator)}</strong> 修改时间 <strong>${esc(log.tableName)}</strong> · ${formatDuration(log.oldDuration)} → ${formatDuration(log.newDuration)}`;
+    }
+
+    return `
+      <div class="log-item">
+        <div class="log-time">${log.dateStr}<br>${timeStr}</div>
+        <div class="log-desc">${desc}</div>
+        <div class="log-action ${actionClass}">${actionText}</div>
+      </div>
+    `;
+  }).join('');
+
+  if (filtered.length > 200) {
+    list.innerHTML += `<div class="log-item" style="justify-content:center;color:var(--n-400);">仅显示最近 200 条，共 ${filtered.length} 条</div>`;
+  }
+}
+
+function exportLogs() {
+  if (!checkAuth()) { showToast('请先登录操作员', 'error'); return; }
+  const dates = getAllLogDates();
+  let allLogs = [];
+  for (const d of dates) {
+    const logs = loadLogs(d);
+    allLogs = allLogs.concat(logs.map(l => ({ ...l, date: d })));
+  }
+
+  // CSV 导出
+  let csv = '\uFEFF日期,时间,操作,桌台,操作员,详情\n';
+  for (const log of allLogs) {
+    const t = new Date(log.time);
+    const time = t.toLocaleTimeString('zh-CN');
+    const actionLabels = { start: '开台', extend: '续时', clear: '清桌', modify: '修改' };
+    let detail = '';
+    if (log.action === 'start') detail = `${log.durationHours}小时`;
+    else if (log.action === 'extend') detail = `+${log.extendHours}小时`;
+    else if (log.action === 'modify') detail = `${formatDuration(log.oldDuration)}→${formatDuration(log.newDuration)}`;
+    csv += `${log.date},${time},${actionLabels[log.action] || log.action},${log.tableName || ''},${log.operator || ''},${detail}\n`;
+  }
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `陶源里日志_${todayStr()}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('日志已导出', 'success');
+}
+
+// ============================================
+// 渲染：数据管理页
+// ============================================
+function renderDataPage() {
+  // 自动清理设置
+  document.getElementById('autoCleanToggle').checked = config.autoClean;
+  document.getElementById('retentionDays').value = config.retentionDays;
+
+  // 备份与恢复区域 — 仅 ROOT 用户可见
+  const backupEl = document.getElementById('backupSection');
+  if (backupEl) {
+    backupEl.style.display = isRoot() ? 'block' : 'none';
+  }
+
+  // 快照备份信息
+  renderBackupInfo();
+
+  // 按日期查看
+  const list = document.getElementById('storageList');
+  const today = todayStr();
+  const dates = getAllLogDates();
+
+  if (dates.length === 0) {
+    list.innerHTML = '<div class="log-empty">暂无历史数据</div>';
+    return;
+  }
+
+  list.innerHTML = dates.map(d => {
+    const logs = loadLogs(d);
+    const size = new Blob([JSON.stringify(logs)]).size;
+    const sizeStr = size < 1024 ? size + ' B' : (size / 1024).toFixed(1) + ' KB';
+    const isToday = d === today;
+
+    return `
+      <div class="storage-item">
+        <div class="storage-date ${isToday ? 'today' : ''}">${d}${isToday ? ' (今天)' : ''}</div>
+        <div class="storage-info">${logs.length} 条日志记录</div>
+        <div class="storage-size">${sizeStr}</div>
+        ${isToday
+          ? '<button class="btn btn-ghost btn-sm" disabled style="opacity:0.4">禁清当天</button>'
+          : `<button class="btn btn-danger btn-sm" onclick="cleanDate('${d}')">清理</button>`
+        }
+      </div>
+    `;
+  }).join('');
+}
+
+function saveAutoClean() {
+  if (!checkAuth()) { showToast('请先登录操作员', 'error'); return; }
+  config.autoClean = document.getElementById('autoCleanToggle').checked;
+  config.retentionDays = parseInt(document.getElementById('retentionDays').value) || 2;
+  saveConfigData(config);
+  showToast('自动清理设置已保存', 'success');
+  runAutoClean();
+}
+
+// ============================================
+// 操作员数据操作工具函数（数据库风格）
+// ============================================
+
+// 获取活跃操作员（status='active'）
+function getActiveOperators() {
+  return config.operators.filter(op => op.status === 'active');
+}
+
+// 获取所有操作员（含已停用）
+function getAllOperators() {
+  return config.operators;
+}
+
+// 获取活跃操作员名字列表
+function getActiveOperatorNames() {
+  return getActiveOperators().map(op => op.name);
+}
+
+// 检查操作员是否存在且活跃
+function isActiveOperator(name) {
+  const op = config.operators.find(o => o.name === name);
+  return op && op.status === 'active';
+}
+
+// 添加操作员
+function addOperator(name) {
+  // 如果已存在（之前被停用），重新激活
+  const existing = config.operators.find(o => o.name === name);
+  if (existing) {
+    existing.status = 'active';
+    existing.disabledAt = null;
+  } else {
+    config.operators.push({
+      name,
+      status: 'active',
+      createdAt: new Date().toISOString()
+    });
+  }
+  saveConfigData(config);
+}
+
+// 停用单个操作员（软删除）
+function disableOperator(name) {
+  const op = config.operators.find(o => o.name === name);
+  if (op) {
+    op.status = 'disabled';
+    op.disabledAt = new Date().toISOString();
+    saveConfigData(config);
+  }
+}
+
+// 停用全部操作员
+function disableAllOperators() {
+  const now = new Date().toISOString();
+  config.operators.forEach(op => {
+    op.status = 'disabled';
+    op.disabledAt = now;
+  });
+  saveConfigData(config);
+}
+
+// 安全工具 — 检查当前用户是否有操作权限
+function checkAuth() {
+  return currentUser && isActiveOperator(currentUser);
+}
+
+// 危险操作保护 — 这些函数绝对不能清理桌台数据和日志
+// doRevokeAll 只允许操作: config.operators + currentUser
+// 禁止触碰: tables对象, LOG_PREFIX数据
+
+function cleanDate(date) {
+  if (!checkAuth()) { showToast('请先登录操作员', 'error'); return; }
+  const today = todayStr();
+  if (date === today) {
+    showToast('严禁清理当天数据！', 'error');
+    return;
+  }
+
+  showConfirm(
+    '确认清理？',
+    `将永久删除 ${date} 的所有日志记录，此操作不可撤销。`,
+    () => {
+      localStorage.removeItem(LOG_PREFIX + date);
+      showToast(`${date} 数据已清理`, 'success');
+      renderDataPage();
+    }
+  );
+}
+
+function runAutoClean() {
+  if (!config.autoClean) return;
+  const today = new Date();
+  const cutoff = new Date(today);
+  cutoff.setDate(cutoff.getDate() - config.retentionDays + 1);
+  const cutoffStr = dateStr(cutoff);
+
+  const dates = getAllLogDates();
+  let cleaned = 0;
+  for (const d of dates) {
+    if (d < cutoffStr) {
+      // 安全检查：确保不是当天（防止时区/精度问题）
+      if (d === todayStr()) continue;
+      localStorage.removeItem(LOG_PREFIX + d);
+      cleaned++;
+    }
+  }
+  if (cleaned > 0) {
+    console.log(`自动清理了 ${cleaned} 天的数据`);
+  }
+}
+
+function exportData() {
+  if (!checkAuth()) { showToast('请先登录操作员', 'error'); return; }
+  if (!isRoot()) { showToast('只有 ROOT 用户可导出数据', 'error'); return; }
+  const data = {
+    config: config,
+    tables: tables,
+    exportDate: todayStr(),
+    logs: {}
+  };
+  const dates = getAllLogDates();
+  for (const d of dates) {
+    data.logs[d] = loadLogs(d);
+  }
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `陶源里数据备份_${todayStr()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('数据已导出', 'success');
+}
+
+function importData(event) {
+  if (!checkAuth()) { showToast('请先登录操作员', 'error'); return; }
+  if (!isRoot()) { showToast('只有 ROOT 用户可导入数据', 'error'); return; }
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      showConfirm(
+        '确认导入？',
+        '导入将覆盖当前所有数据，建议先导出当前数据作为备份。',
+        () => {
+          // 导入前自动备份当前数据
+          autoBackup('导入数据');
+          if (data.config && typeof data.config === 'object') {
+            config = migrateOperators({ ...DEFAULT_CONFIG, ...data.config });
+            saveConfigData(config);
+          }
+          if (data.tables && typeof data.tables === 'object') {
+            // 导入时做数据校验
+            const sanitized = {};
+            for (const id in data.tables) {
+              const t = data.tables[id];
+              if (!t || typeof t !== 'object') continue;
+              sanitized[id] = {
+                id: String(t.id || id),
+                name: String(t.name || id),
+                status: (t.status === 'active') ? 'active' : 'idle',
+                startTime: (typeof t.startTime === 'string') ? t.startTime : null,
+                endTime: (typeof t.endTime === 'string') ? t.endTime : null,
+                durationHours: (typeof t.durationHours === 'number' && !isNaN(t.durationHours)) ? t.durationHours : 0,
+                operator: (typeof t.operator === 'string') ? t.operator : null,
+                extensions: Array.isArray(t.extensions) ? t.extensions : [],
+                sessionId: t.sessionId ? String(t.sessionId) : null,
+                isFullDay: (typeof t.isFullDay === 'boolean') ? t.isFullDay : false
+              };
+              // 时间一致性校验（全天桌台不需要 endTime）
+              if (sanitized[id].status === 'active' && !sanitized[id].isFullDay && (!sanitized[id].startTime || !sanitized[id].endTime)) {
+                sanitized[id].status = 'idle';
+              }
+            }
+            tables = sanitized;
+            saveTables(tables);
+          }
+          if (data.logs) {
+            // 先清除旧日志
+            const oldDates = getAllLogDates();
+            for (const d of oldDates) {
+              localStorage.removeItem(LOG_PREFIX + d);
+            }
+            for (const d in data.logs) {
+              saveLogs(d, data.logs[d]);
+            }
+          }
+          initTables();
+          renderAll();
+          showToast('数据导入成功', 'success');
+        }
+      );
+    } catch(err) {
+      showToast('文件格式错误，导入失败', 'error');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+// ============================================
+// 操作模态框
+// ============================================
+function openActionModal(tableId) {
+  if (!checkAuth()) { showToast('请先登录操作员', 'error'); return; }
+  const table = tables[tableId];
+  if (!table) return;
+
+  const state = getTableState(table);
+  const modal = document.getElementById('actionModalContent');
+  const overlay = document.getElementById('actionModal');
+
+  if (table.status === 'idle') {
+    // 开台 — 不预选任何按钮，小时默认0
+    selectedDuration = 0;
+    selectedFullDay = false;
+
+    modal.innerHTML = `
+      <div class="modal-title">开台 · ${esc(table.name)} 号桌</div>
+      <div class="modal-body">
+        <div style="display:flex;align-items:center;gap:var(--sp-2);margin-bottom:var(--sp-4);padding:var(--sp-2) var(--sp-3);background:var(--c-primary-bg);border-radius:var(--r-md);">
+          <div class="user-avatar" style="width:32px;height:32px;font-size:0.875rem;">${esc(getInitial(currentUser))}</div>
+          <span style="font-size:0.875rem;color:var(--n-600);">操作员</span>
+          <strong style="font-size:0.9375rem;color:var(--c-primary-dark);">${esc(currentUser)}</strong>
+        </div>
+        <div class="field">
+          <label class="field-label">选择时长</label>
+          <div class="duration-options">
+            <button class="dur-btn" data-dur="1" onclick="selectDur(this, 1)">1<span class="dur-sub">小时</span></button>
+            <button class="dur-btn" data-dur="2" onclick="selectDur(this, 2)">2<span class="dur-sub">小时</span></button>
+            <button class="dur-btn" data-dur="3" onclick="selectDur(this, 3)">3<span class="dur-sub">小时</span></button>
+            <div class="dur-extra" id="durExtra">
+              <button class="dur-btn" data-dur="4" onclick="selectDur(this, 4)">4<span class="dur-sub">小时</span></button>
+              <button class="dur-btn" data-dur="5" onclick="selectDur(this, 5)">5<span class="dur-sub">小时</span></button>
+              <button class="dur-btn" data-dur="6" onclick="selectDur(this, 6)">6<span class="dur-sub">小时</span></button>
+            </div>
+            <button class="dur-more-btn" onclick="toggleDurExtra()">展开更多 ▾</button>
+          </div>
+          <div style="margin-top:var(--sp-3);display:flex;align-items:center;gap:var(--sp-2);">
+            <span style="font-size:0.8125rem;color:var(--n-500);">或输入：</span>
+            <input type="number" class="input" id="customDur" min="0" max="12" step="1" placeholder="0-12" style="width:90px;text-align:center;font-weight:700;" onfocus="onCustomDurFocus(this)" oninput="onCustomDur(this)">
+            <span style="font-size:0.8125rem;color:var(--n-400);">小时（整数，0-12）</span>
+          </div>
+          <button class="dur-btn dur-btn-fullday" data-dur="day" onclick="selectFullDay(this)" style="width:100%;margin-top:var(--sp-3);">
+            <span style="font-size:1rem;">🕐 全天</span>
+            <span class="dur-sub fullday-sub">不限时，手动清桌结束</span>
+          </button>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('actionModal')">取消</button>
+        <button class="btn btn-primary" onclick="startSession('${tableId}')">确认开台</button>
+      </div>
+    `;
+  } else {
+    // 续时 / 清桌
+    const startTime = new Date(table.startTime).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+
+    // 全天桌台：简化弹窗，只显示信息和清桌
+    if (table.isFullDay) {
+      modal.innerHTML = `
+        <div class="modal-title">${esc(table.name)} 号桌</div>
+        <div class="modal-body">
+          <div style="display:flex;align-items:center;gap:var(--sp-2);margin-bottom:var(--sp-3);">
+            <span style="font-size:0.875rem;color:var(--s-active);font-weight:700;">● 全天使用中</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3);margin-bottom:var(--sp-3);">
+            <div>
+              <div style="font-size:0.75rem;color:var(--n-400);">开始时间</div>
+              <div style="font-size:1.125rem;font-weight:700;font-variant-numeric:tabular-nums;">${startTime}</div>
+            </div>
+            <div>
+              <div style="font-size:0.75rem;color:var(--n-400);">模式</div>
+              <div style="font-size:1.125rem;font-weight:700;color:var(--c-primary-dark);">🕐 全天</div>
+            </div>
+            <div>
+              <div style="font-size:0.75rem;color:var(--n-400);">操作员</div>
+              <div style="font-size:1.125rem;font-weight:700;">${esc(table.operator)}</div>
+            </div>
+          </div>
+          <div style="padding:var(--sp-3);background:var(--c-primary-bg);border-radius:var(--r-md);font-size:0.8125rem;color:var(--n-600);line-height:1.6;">
+            💡 全天模式不限时，顾客用完后点"清桌"结束即可。
+          </div>
+        </div>
+        <div class="modal-actions" style="flex-direction:column;gap:var(--sp-2);">
+          <button class="btn btn-danger btn-lg" onclick="clearTableConfirm('${tableId}')">清桌（结束使用）</button>
+        </div>
+      `;
+      overlay.classList.add('show');
+      return;
+    }
+
+    const endTime = new Date(table.endTime).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+
+    let extHistory = '';
+    if (table.extensions && table.extensions.length > 0) {
+      extHistory = '<div style="margin-top:var(--sp-3);padding:var(--sp-3);background:var(--n-50);border-radius:var(--r-md);font-size:0.8125rem;">' +
+        '<div style="font-weight:600;margin-bottom:4px;color:var(--n-600);">续时记录</div>' +
+        table.extensions.map(e => `<div>· ${new Date(e.time).toLocaleTimeString('zh-CN', {hour:'2-digit',minute:'2-digit'})} +${e.hours}小时（${esc(e.operator)}）</div>`).join('') +
+        '</div>';
+    }
+
+    const stateInfo = {
+      active: { text: '使用中', color: 'var(--s-active)' },
+      warn: { text: '即将到期！', color: 'oklch(45% 0.15 75)' },
+      expired: { text: '已到期！请续时或清桌', color: 'var(--s-expired)' },
+      overtime: { text: '超时 10 分钟+！请立即处理', color: 'var(--s-overtime)' },
+    };
+
+    modal.innerHTML = `
+      <div class="modal-title">${esc(table.name)} 号桌</div>
+      <div class="modal-body" style="padding-bottom:0;">
+        <div style="display:flex;align-items:center;gap:var(--sp-2);margin-bottom:var(--sp-3);">
+          <span style="font-size:0.875rem;color:${stateInfo[state].color};font-weight:700;">● ${stateInfo[state].text}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-2) var(--sp-3);padding:var(--sp-3);background:var(--n-50);border-radius:var(--r-md);margin-bottom:var(--sp-3);">
+          <div>
+            <div style="font-size:0.75rem;color:var(--n-400);">开始时间</div>
+            <div style="font-size:1.0625rem;font-weight:700;font-variant-numeric:tabular-nums;">${startTime}</div>
+          </div>
+          <div>
+            <div style="font-size:0.75rem;color:var(--n-400);">到期时间</div>
+            <div style="font-size:1.0625rem;font-weight:700;font-variant-numeric:tabular-nums;">${endTime}</div>
+          </div>
+          <div>
+            <div style="font-size:0.75rem;color:var(--n-400);">总时长</div>
+            <div style="font-size:1.0625rem;font-weight:700;">${formatDuration(table.durationHours)}</div>
+          </div>
+          <div>
+            <div style="font-size:0.75rem;color:var(--n-400);">操作员</div>
+            <div style="font-size:1.0625rem;font-weight:700;">${esc(table.operator)}</div>
+          </div>
+        </div>
+        ${extHistory}
+      </div>
+      <div style="padding:var(--sp-3) 0;border-top:1px solid var(--n-100);">
+        <label class="field-label" style="margin-bottom:var(--sp-2);">续时（默认 1 小时）</label>
+        <div class="duration-options">
+          <button class="dur-btn selected" onclick="selectExtendDur(this, 1)">1<span class="dur-sub">小时</span></button>
+          <button class="dur-btn" onclick="selectExtendDur(this, 2)">2<span class="dur-sub">小时</span></button>
+          <button class="dur-btn" onclick="selectExtendDur(this, 3)">3<span class="dur-sub">小时</span></button>
+          <div class="dur-extra" id="extDurExtra">
+            <button class="dur-btn" onclick="selectExtendDur(this, 4)">4<span class="dur-sub">小时</span></button>
+            <button class="dur-btn" onclick="selectExtendDur(this, 5)">5<span class="dur-sub">小时</span></button>
+            <button class="dur-btn" onclick="selectExtendDur(this, 6)">6<span class="dur-sub">小时</span></button>
+          </div>
+          <button class="dur-more-btn" onclick="toggleExtDurExtra()">展开更多 ▾</button>
+        </div>
+        <div style="margin-top:var(--sp-3);display:flex;align-items:center;gap:var(--sp-2);">
+          <span style="font-size:0.8125rem;color:var(--n-500);white-space:nowrap;">或输入：</span>
+          <input type="number" class="input" id="customExtDur" min="0" max="12" step="1" placeholder="0-12" style="width:80px;text-align:center;font-weight:700;padding:var(--sp-2) var(--sp-3);min-height:40px;" oninput="onCustomExtDur(this)">
+          <span style="font-size:0.8125rem;color:var(--n-400);white-space:nowrap;">小时（0-12，整数）</span>
+        </div>
+      </div>
+      <div class="modal-actions" style="flex-direction:column;gap:var(--sp-2);margin-top:0;border-top:1px solid var(--n-100);padding-top:var(--sp-3);">
+        <button class="btn btn-primary btn-lg" onclick="extendSession('${tableId}')">确认续时</button>
+        <button class="btn btn-secondary" style="width:100%;" onclick="showModifyTime('${tableId}')">修改时间</button>
+        <button class="btn btn-danger" style="width:100%;" onclick="clearTableConfirm('${tableId}')">清桌（结束使用）</button>
+      </div>
+    `;
+
+    // 初始化续时选择
+    window._extendDur = 1;
+  }
+
+  overlay.classList.add('show');
+}
+
+// ============================================
+// 修改时间 — 直接修改从起点开始的总时长
+// ============================================
+function showModifyTime(tableId) {
+  if (!checkAuth()) { showToast('请先登录操作员', 'error'); return; }
+  const table = tables[tableId];
+  if (!table) return;
+  if (table.isFullDay) { showToast('全天桌台无需修改时间', 'error'); return; }
+
+  const modal = document.getElementById('actionModalContent');
+  const startTime = new Date(table.startTime).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+  const endTime = new Date(table.endTime).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+
+  // 当前总时长拆分为小时和分钟
+  const curHours = Math.floor(table.durationHours);
+  const curMins = Math.round((table.durationHours - curHours) * 60);
+
+  modal.innerHTML = `
+    <div class="modal-title">修改时间 · ${esc(table.name)} 号桌</div>
+    <div class="modal-body">
+      <div style="padding:var(--sp-3);background:var(--n-50);border-radius:var(--r-md);margin-bottom:var(--sp-4);font-size:0.8125rem;color:var(--n-600);line-height:1.6;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:var(--sp-1);">
+          <span>开始时间（起点）</span><strong>${startTime}</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:var(--sp-1);">
+          <span>当前到期</span><strong>${endTime}</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;">
+          <span>当前时长</span><strong>${formatDuration(table.durationHours)}</strong>
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">修改时长（从起点开始计时）</label>
+        <div style="display:flex;align-items:center;gap:var(--sp-2);margin-top:var(--sp-2);">
+          <input type="number" class="input" id="modifyHours" min="0" max="12" step="1" value="${curHours}" style="width:70px;text-align:center;font-weight:700;" oninput="updateModifyPreview('${tableId}')">
+          <span style="font-size:0.8125rem;color:var(--n-500);">小时</span>
+          <input type="number" class="input" id="modifyMins" min="0" max="55" step="5" value="${curMins}" style="width:70px;text-align:center;font-weight:700;" oninput="updateModifyPreview('${tableId}')">
+          <span style="font-size:0.8125rem;color:var(--n-400);">分钟</span>
+        </div>
+        <div style="margin-top:var(--sp-3);padding:var(--sp-2) var(--sp-3);background:var(--c-primary-bg);border-radius:var(--r-md);font-size:0.8125rem;color:var(--n-600);">
+          新到期时间：<strong id="newEndTimePreview" style="color:var(--c-primary-dark);">--:--</strong>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions" style="flex-direction:column;gap:var(--sp-2);">
+      <button class="btn btn-primary btn-lg" onclick="modifyTime('${tableId}')">确认修改</button>
+      <button class="btn btn-secondary" onclick="openActionModal('${tableId}')">返回</button>
+    </div>
+  `;
+
+  updateModifyPreview(tableId);
+}
+
+function updateModifyPreview(tableId) {
+  const table = tables[tableId];
+  if (!table) return;
+  const hEl = document.getElementById('modifyHours');
+  const mEl = document.getElementById('modifyMins');
+  if (!hEl || !mEl) return;
+
+  // 限制范围
+  let h = parseInt(hEl.value);
+  if (!isNaN(h)) {
+    if (h < 0) { hEl.value = 0; h = 0; }
+    if (h > 12) { hEl.value = 12; h = 12; }
+  } else { h = 0; }
+
+  let m = parseInt(mEl.value);
+  if (!isNaN(m)) {
+    if (m < 0) { mEl.value = 0; m = 0; }
+    if (m > 55) { mEl.value = 55; m = 55; }
+  } else { m = 0; }
+
+  const totalMin = h * 60 + m;
+  if (totalMin <= 0) {
+    document.getElementById('newEndTimePreview').textContent = '时长不能为0';
+    return;
+  }
+
+  // 从开始时间起点计算新到期时间
+  const start = new Date(table.startTime);
+  const newEnd = new Date(start.getTime() + totalMin * 60000);
+  const endStr = newEnd.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+  document.getElementById('newEndTimePreview').textContent = endStr;
+}
+
+function modifyTime(tableId) {
+  if (!checkAuth()) { showToast('请先登录操作员', 'error'); return; }
+  const table = tables[tableId];
+  if (!table) { showToast('桌台不存在', 'error'); return; }
+  if (table.isFullDay) { showToast('全天桌台无需修改时间', 'error'); return; }
+
+  const hEl = document.getElementById('modifyHours');
+  const mEl = document.getElementById('modifyMins');
+  const h = parseInt(hEl?.value) || 0;
+  const m = parseInt(mEl?.value) || 0;
+  const totalMin = h * 60 + m;
+
+  if (totalMin <= 0) {
+    showToast('时长不能为0', 'error');
+    return;
+  }
+
+  const oldDuration = table.durationHours;
+  const start = new Date(table.startTime);
+  const newEnd = new Date(start.getTime() + totalMin * 60000);
+
+  table.endTime = newEnd.toISOString();
+  table.durationHours = Number((totalMin / 60).toFixed(2));
+  table.extensions = []; // 修改时间时清掉续费记录
+
+  saveTables(tables);
+
+  addLog('modify', {
+    tableId,
+    tableName: table.name,
+    operator: currentUser,
+    oldDuration: oldDuration,
+    newDuration: table.durationHours
+  });
+
+  closeModal('actionModal');
+  renderAll();
+  const label = m > 0 ? `${h}小时${m}分` : `${h}小时`;
+  showToast(`${table.name} 号桌时长已修改为 ${label}`, 'success');
+}
+
+function selectDur(btn, hours) {
+  btn.closest('.field').querySelectorAll('.dur-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedDuration = hours;
+  selectedFullDay = false;
+  const customHour = document.getElementById('customDur');
+  if (customHour) customHour.value = '';
+}
+
+function selectFullDay(btn) {
+  btn.closest('.field').querySelectorAll('.dur-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedFullDay = true;
+  const customHour = document.getElementById('customDur');
+  if (customHour) customHour.value = '';
+}
+
+function selectExtendDur(btn, hours) {
+  btn.parentElement.querySelectorAll('.dur-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  window._extendDur = hours;
+  // 清除自定义输入
+  const customInput = document.getElementById('customExtDur');
+  if (customInput) customInput.value = '';
+}
+
+// 自定义时长输入 — 开台（小时）
+// 自定义时长输入 — 开台（点击输入框时立即取消按钮选中）
+function onCustomDurFocus(input) {
+  input.closest('.field').querySelectorAll('.dur-btn').forEach(b => b.classList.remove('selected'));
+  selectedFullDay = false;
+}
+
+function onCustomDur(input) {
+  let val = parseInt(input.value);
+  if (isNaN(val)) return;
+  if (val < 0) { val = 0; input.value = 0; }
+  if (val > 12) { val = 12; input.value = 12; }
+  selectedDuration = val;
+  selectedFullDay = false;
+  // 取消所有按钮选中状态（包括全天）
+  input.closest('.field').querySelectorAll('.dur-btn').forEach(b => b.classList.remove('selected'));
+}
+
+// 自定义时长输入 — 续时
+function onCustomExtDur(input) {
+  let val = parseInt(input.value);
+  if (isNaN(val)) return;
+  if (val < 0) { val = 0; input.value = 0; }
+  if (val > 12) { val = 12; input.value = 12; }
+  window._extendDur = val;
+  // 取消按钮选中状态
+  input.closest('.duration-options').parentElement.querySelectorAll('.dur-btn').forEach(b => b.classList.remove('selected'));
+}
+
+// 展开/收起更多时长选项
+function toggleDurExtra() {
+  const el = document.getElementById('durExtra');
+  const btn = el.parentElement.querySelector('.dur-more-btn');
+  if (el.classList.contains('show')) {
+    el.classList.remove('show');
+    btn.textContent = '展开更多 ▾';
+  } else {
+    el.classList.add('show');
+    btn.textContent = '收起 ▴';
+  }
+}
+
+function toggleExtDurExtra() {
+  const el = document.getElementById('extDurExtra');
+  const btn = el.parentElement.querySelector('.dur-more-btn');
+  if (el.classList.contains('show')) {
+    el.classList.remove('show');
+    btn.textContent = '展开更多 ▾';
+  } else {
+    el.classList.add('show');
+    btn.textContent = '收起 ▴';
+  }
+}
+
+function startSession(tableId) {
+  if (!checkAuth()) { showToast('请先登录操作员', 'error'); return; }
+  initAudio(); // 用户点击开台时初始化音频
+  const table = tables[tableId];
+  if (!table) { showToast('桌台不存在', 'error'); return; }
+  if (table.status !== 'idle') { showToast('该桌台正在使用中', 'error'); return; }
+  const now = new Date();
+
+  table.status = 'active';
+  table.startTime = now.toISOString();
+  table.operator = currentUser;
+  table.extensions = [];
+  table.sessionId = 'S' + now.getTime();
+
+  if (selectedFullDay) {
+    // 全天模式：不设 endTime，标记 isFullDay
+    table.isFullDay = true;
+    table.endTime = null;
+    table.durationHours = 0;
+  } else {
+    table.isFullDay = false;
+    // 实时从 DOM 读取小时数（优先级：自定义小时输入 > 选中的按钮 > 0）
+    const customHourEl = document.getElementById('customDur');
+    let hours;
+    if (customHourEl && customHourEl.value !== '') {
+      // 用户在小时输入框输入了值
+      hours = parseInt(customHourEl.value) || 0;
+    } else {
+      // 检查是否有按钮被选中
+      const selectedBtn = document.querySelector('#actionModalContent .dur-btn.selected[data-dur]');
+      hours = selectedBtn ? parseInt(selectedBtn.dataset.dur) : 0;
+    }
+    // 开台只支持整数小时
+    const totalMinutes = hours * 60;
+
+    // 防御：总时长不能为 0
+    if (totalMinutes <= 0) {
+      showToast('请选择或输入时长', 'error');
+      return;
+    }
+
+    const end = new Date(now.getTime() + totalMinutes * 60000);
+    table.endTime = end.toISOString();
+    table.durationHours = hours;
+    selectedDuration = hours;
+  }
+
+  saveTables(tables);
+
+  addLog('start', {
+    tableId,
+    tableName: table.name,
+    operator: currentUser,
+    durationHours: selectedFullDay ? 0 : table.durationHours,
+    isFullDay: selectedFullDay
+  });
+
+  closeModal('actionModal');
+  renderAll();
+  const timeLabel = selectedFullDay ? '全天' : `${selectedDuration}小时`;
+  showToast(`${table.name} 号桌已开台 · ${timeLabel}`, 'success');
+}
+
+function extendSession(tableId) {
+  if (!checkAuth()) { showToast('请先登录操作员', 'error'); return; }
+  const table = tables[tableId];
+  if (!table) { showToast('桌台不存在', 'error'); return; }
+  if (table.status === 'idle') { showToast('该桌台未在使用中', 'error'); return; }
+  if (table.isFullDay) { showToast('全天桌台无需续时', 'error'); return; }
+  const hours = window._extendDur || 1;
+
+  if (hours <= 0) {
+    showToast('续时时长不能为 0', 'error');
+    return;
+  }
+
+  // 续时始终从原到期时间开始计算
+  // 超时的时间从续时时长里扣除（例：超时10分钟+续1小时 → 实际多50分钟）
+  const now = new Date();
+  const currentEnd = new Date(table.endTime);
+  let newEnd = new Date(currentEnd.getTime() + hours * 3600000);
+  // 防御：严重超时（超时时间 > 续时时长）时，newEnd 会仍在过去，
+  // 导致续时后立刻又是超时状态 → 从当前时间起算，保证至少有续时的时长
+  if (newEnd <= now) {
+    newEnd = new Date(now.getTime() + hours * 3600000);
+  }
+
+  table.endTime = newEnd.toISOString();
+  table.durationHours += hours;
+  table.extensions = table.extensions || [];
+  table.extensions.push({
+    time: now.toISOString(),
+    hours,
+    operator: currentUser
+  });
+
+  saveTables(tables);
+
+  addLog('extend', {
+    tableId,
+    tableName: table.name,
+    operator: currentUser,
+    extendHours: hours
+  });
+
+  closeModal('actionModal');
+  renderAll();
+  showToast(`${table.name} 号桌续时 ${hours} 小时`, 'success');
+}
+
+function clearTableConfirm(tableId) {
+  if (!checkAuth()) { showToast('请先登录操作员', 'error'); return; }
+  const table = tables[tableId];
+  if (!table) { showToast('桌台不存在', 'error'); return; }
+
+  // 直接清桌（用户已在操作弹窗里点了"清桌"按钮，不需要二次确认）
+  addLog('clear', {
+    tableId,
+    tableName: table.name,
+    operator: currentUser,
+    durationHours: table.durationHours
+  });
+
+  table.status = 'idle';
+  table.startTime = null;
+  table.endTime = null;
+  table.durationHours = 0;
+  table.operator = null;
+  table.extensions = [];
+  table.sessionId = null;
+  table.isFullDay = false;
+
+  saveTables(tables);
+  closeModal('actionModal');
+  renderAll();
+  showToast(`${table.name} 号桌已清桌`, 'success');
+}
+
+// ============================================
+// 配置
+// ============================================
+function openConfigModal() {
+  if (!checkAuth()) { showToast('请先登录操作员', 'error'); return; }
+  document.getElementById('cfgTableCount').value = config.tableCount;
+  // 操作员管理已移到登录页的停用/启用功能，这里只显示当前活跃操作员
+  document.getElementById('cfgOperators').value = getActiveOperatorNames().join(', ');
+  document.getElementById('cfgOperators').placeholder = '操作员管理请到登录页操作';
+  document.getElementById('configModal').classList.add('show');
+}
+
+function saveConfig() {
+  if (!checkAuth()) { showToast('请先登录操作员', 'error'); return; }
+  const count = parseInt(document.getElementById('cfgTableCount').value);
+
+  if (count < 1 || count > 1000) {
+    showToast('桌台数量需在 1-1000 之间', 'error');
+    return;
+  }
+
+  // 批量设置前自动备份
+  autoBackup('批量设置桌数');
+
+  const oldCount = config.tableCount;
+  config.tableCount = count;
+  saveConfigData(config);
+  initTables();
+  renderAll();
+  closeModal('configModal');
+  if (count !== oldCount) {
+    showToast(`已设置 ${count} 张桌台`, 'success');
+  } else {
+    showToast('设置已保存', 'success');
+  }
+}
+
+// ============================================
+// 模态框工具
+// ============================================
+function closeModal(id) {
+  document.getElementById(id).classList.remove('show');
+}
+
+function showConfirm(title, message, onConfirm) {
+  // 用 actionModal 位置
+  const modal = document.getElementById('actionModalContent');
+  const overlay = document.getElementById('actionModal');
+
+  modal.innerHTML = `
+    <div class="modal-title">${title}</div>
+    <div class="modal-body">
+      <p style="color:var(--n-600);line-height:1.6;">${message}</p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('actionModal')">取消</button>
+      <button class="btn btn-danger" id="confirmBtn">确认</button>
+    </div>
+  `;
+
+  overlay.classList.add('show');
+  document.getElementById('confirmBtn').onclick = () => {
+    closeModal('actionModal');
+    onConfirm();
+  };
+}
+
+// ============================================
+// Toast
+// ============================================
+function showToast(msg, type = '') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = 'toast ' + type;
+  toast.textContent = msg;
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.animation = 'toastIn 0.2s var(--ease-in) reverse';
+    setTimeout(() => toast.remove(), 200);
+  }, 2500);
+}
+
+// ============================================
+// 页面切换
+// ============================================
+function switchPage(pageName) {
+  // 安全闸门：未登录时禁止切换到任何功能页面
+  if (!checkAuth()) {
+    document.getElementById('loginOverlay').style.display = 'flex';
+    showToast('请先登录操作员', 'error');
+    return;
+  }
+
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelector(`.tab[data-page="${pageName}"]`).classList.add('active');
+  document.getElementById(`page-${pageName}`).classList.add('active');
+
+  if (pageName === 'tables') { renderTables(); }
+  if (pageName === 'filter') renderFilterGrid();
+  if (pageName === 'charts') renderCharts();
+  if (pageName === 'logs') renderLogs();
+  if (pageName === 'data') renderDataPage();
+}
+
+// ============================================
+// 全局渲染
+// ============================================
+function renderAll() {
+  renderStats();
+  renderTables();
+  const activePage = document.querySelector('.tab.active').dataset.page;
+  if (activePage === 'filter') renderFilterGrid();
+  if (activePage === 'charts') renderCharts();
+  if (activePage === 'logs') renderLogs();
+  if (activePage === 'data') renderDataPage();
+}
+
+// ============================================
+// 初始化
+// ============================================
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => switchPage(tab.dataset.page));
+});
+
+// 筛选 pill 事件
+document.querySelectorAll('.pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    const filterType = pill.dataset.filter;
+    const val = pill.dataset.val;
+
+    // 取消同组其他 active
+    document.querySelectorAll(`.pill[data-filter="${filterType}"]`).forEach(p => {
+      p.classList.remove('active');
+    });
+    pill.classList.add('active');
+
+    currentFilter[filterType] = val;
+    renderFilterGrid();
+  });
+});
+
+// 点击遮罩关闭模态框
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', (e) => {
+    if (e.target === o) o.classList.remove('show');
+  });
+});
+
+// 启动
+initTables();
+runAutoClean();
+renderLoginScreen();
+
+// 检查是否有已登录用户 — 但必须同时存在于操作员列表中
+// （防止被注销的人靠缓存的 currentUser 直接绕过登录）
+const savedUser = loadCurrentUser();
+if (savedUser && isActiveOperator(savedUser)) {
+  login(savedUser);
+} else {
+  // savedUser 不在操作员列表里 → 清掉缓存，强制回到登录页
+  if (savedUser) clearCurrentUser();
+  renderAll();
+}
+
+// 每秒更新桌台计时
+setInterval(() => {
+  const activePage = document.querySelector('.tab.active').dataset.page;
+  if (activePage === 'tables' || activePage === 'filter') {
+    // 只更新剩余时间文字，不重建整个 DOM（避免点击丢失和闪烁）
+    const grid = activePage === 'tables' ? document.getElementById('tableGrid') : document.getElementById('filterGrid');
+    const cards = grid.querySelectorAll('.tcard');
+    const statusLabels = {
+      idle: '空闲', active: '使用中', warn: '即将到期',
+      expired: '已到期', overtime: '超时'
+    };
+    cards.forEach(card => {
+      const onclickAttr = card.getAttribute('onclick');
+      const match = onclickAttr && onclickAttr.match(/'([^']+)'/);
+      if (!match) return;
+      const tableId = match[1];
+      const table = tables[tableId];
+      if (!table || table.status === 'idle') return;
+      // 全天桌台不需要每秒更新倒计时
+      if (table.isFullDay) return;
+
+      const newState = getTableState(table);
+      const oldClass = card.className;
+
+      // 状态变化时只更新该卡片的 class 和状态文字，不重建整个 DOM
+      const stateClasses = ['idle','active','warn','expired','overtime'];
+      const oldState = stateClasses.find(s => oldClass.includes(s));
+      if (oldState !== newState) {
+        // 移除旧状态 class，添加新状态 class
+        card.classList.remove(oldState);
+        card.classList.add(newState);
+        // 更新状态标签文字
+        const statusEl = card.querySelector('.tcard-status');
+        if (statusEl) statusEl.textContent = statusLabels[newState];
+      }
+
+      // 只更新时间文字
+      const remainEl = card.querySelector('.tcard-remain');
+      if (remainEl) {
+        const newTime = getRemainingTime(table);
+        if (remainEl.textContent !== newTime) {
+          remainEl.textContent = newTime;
+        }
+      }
+    });
+  }
+
+  // 更新顶部统计
+  renderStats();
+
+  // 自动存盘检查（有活跃桌台时每5秒存一次）
+  autoSaveCheck();
+}, 1000);
+
+// 防止误退出 — 三重保护
+window.addEventListener('beforeunload', () => {
+  saveTables(tables);
+  saveConfigData(config);
+  if (currentUser) saveCurrentUser(currentUser);
+});
+
+// 页面隐藏时也存（切后台、切 Tab）
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') {
+    saveTables(tables);
+    saveConfigData(config);
+  }
+});
+
+// 每秒刷新时如果页面上有活跃桌台，也顺便存一次（最多每5秒存一次）
+let lastAutoSave = 0;
+function autoSaveCheck() {
+  const now = Date.now();
+  if (now - lastAutoSave < 5000) return;
+  let hasActive = false;
+  for (const id in tables) {
+    if (tables[id].status !== 'idle') { hasActive = true; break; }
+  }
+  if (hasActive) {
+    saveTables(tables);
+    lastAutoSave = now;
+  }
+}
+
+console.log('陶源里桌台管家 v1.1 已启动');
+
+// ============================================
+// 到期提醒 — 音频 + 振动（首次到期时触发）
+// ============================================
+// alertedTables 已在顶部全局变量区声明
+
+function checkAlerts() {
+  let hasExpired = false;
+  let hasOvertime = false;
+
+  for (const id in tables) {
+    const t = tables[id];
+    if (t.status === 'idle') {
+      alertedTables.delete(id);
+      continue;
+    }
+    // 全天桌台不触发到期提醒
+    if (t.isFullDay) continue;
+    const state = getTableState(t);
+    if (state === 'expired' && !alertedTables.has(id + '_expired')) {
+      alertedTables.add(id + '_expired');
+      hasExpired = true;
+    }
+    if (state === 'overtime' && !alertedTables.has(id + '_overtime')) {
+      alertedTables.add(id + '_overtime');
+      hasOvertime = true;
+    }
+    // 如果回到正常状态，清除标记
+    if (state === 'active' || state === 'warn') {
+      alertedTables.delete(id + '_expired');
+      alertedTables.delete(id + '_overtime');
+    }
+  }
+
+  if (hasOvertime) {
+    playBeep(2); // 超时：连续2声
+    safeVibrate([200, 100, 200]);
+  } else if (hasExpired) {
+    playBeep(1); // 到期：1声
+    safeVibrate(200);
+  }
+}
+
+// 生成蜂鸣声
+// audioCtx 已在顶部全局变量区声明
+// audioReady 标记音频是否已就绪（必须在用户手势后才能创建/恢复 AudioContext）
+
+// 初始化音频上下文
+// 注意：Chrome 自动播放策略要求 AudioContext 必须在用户手势中创建/恢复
+// 启动时自动登录、setInterval 定时器都不是用户手势 → 会报错并失败
+// 策略：标记 audioReady=false，在首次真实用户手势（click/touchstart）时才真正初始化
+function initAudio() {
+  // 还没有任何用户手势 → 暂不创建，等首次手势触发
+  if (!audioReady) return;
+  try {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    // iOS/Android: suspended 状态需要 resume（必须在用户手势中调用才有效）
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+  } catch(e) {
+    // 静默失败：自动播放策略拦截属正常情况，不打扰用户
+  }
+}
+
+function playBeep(count) {
+  // 音频未就绪（尚未有用户手势）→ 静默跳过，避免每 5 秒刷屏报错
+  if (!audioReady || !audioCtx) {
+    // 尝试懒初始化（playBeep 调用链可能来自用户手势，如点击开台）
+    if (audioReady) initAudio();
+    if (!audioCtx) return;
+  }
+  try {
+    // 移动端可能再次 suspended，每次播放前 resume
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+    for (let i = 0; i < count; i++) {
+      const startTime = audioCtx.currentTime + i * 0.3;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.frequency.value = 880;
+      osc.type = 'sine';
+      gain.gain.setValueAtTime(0, startTime);
+      gain.gain.linearRampToValueAtTime(0.3, startTime + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.2);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(startTime);
+      osc.stop(startTime + 0.2);
+    }
+  } catch(e) {}
+}
+
+// 安全振动：浏览器要求用户手势后才能调用，自动播放策略拦截属正常
+function safeVibrate(pattern) {
+  try {
+    if (navigator.vibrate && audioReady) {
+      navigator.vibrate(pattern);
+    }
+  } catch(e) {}
+}
+
+// 首次用户手势标记音频就绪 + 立即初始化（一次性）
+let _audioReadyInited = false;
+function _markAudioReady() {
+  audioReady = true;
+  if (!_audioReadyInited) {
+    _audioReadyInited = true;
+    initAudio();
+    // 手势监听只需一次，之后移除
+    document.removeEventListener('click', _markAudioReady, true);
+    document.removeEventListener('touchstart', _markAudioReady, true);
+    document.removeEventListener('keydown', _markAudioReady, true);
+  }
+}
+document.addEventListener('click', _markAudioReady, true);
+document.addEventListener('touchstart', _markAudioReady, true);
+document.addEventListener('keydown', _markAudioReady, true);
+
+setInterval(checkAlerts, 5000); // 每5秒检查提醒
+</script>
+
+</body>
+</html>
