@@ -1494,19 +1494,19 @@ body {
   <div class="log-filters">
     <div class="field" style="margin:0;">
       <label class="field-label">操作员</label>
-      <select class="input" id="logOperator" style="min-height:40px;padding:8px 12px;">
+      <select class="input" id="logOperator" onchange="renderLogs()" style="min-height:40px;padding:8px 12px;">
         <option value="">全部</option>
       </select>
     </div>
     <div class="field" style="margin:0;">
       <label class="field-label">日期</label>
-      <select class="input" id="logDate" style="min-height:40px;padding:8px 12px;">
+      <select class="input" id="logDate" onchange="renderLogs()" style="min-height:40px;padding:8px 12px;">
         <option value="">全部</option>
       </select>
     </div>
     <div class="field" style="margin:0;">
       <label class="field-label">操作类型</label>
-      <select class="input" id="logAction" style="min-height:40px;padding:8px 12px;">
+      <select class="input" id="logAction" onchange="renderLogs()" style="min-height:40px;padding:8px 12px;">
         <option value="">全部</option>
         <option value="start">开台</option>
         <option value="extend">续时</option>
