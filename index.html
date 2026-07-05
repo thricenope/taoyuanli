@@ -3302,7 +3302,7 @@ function openActionModal(tableId) {
             <span style="font-size:0.8125rem;color:var(--n-500);">或输入：</span>
             <input type="number" class="input" id="customDurH" min="0" max="12" step="1" placeholder="0-12" style="width:70px;text-align:center;font-weight:700;" onfocus="onCustomDurFocus(this)" oninput="onCustomDurH(this)">
             <span style="font-size:0.8125rem;color:var(--n-400);">时</span>
-            <input type="number" class="input" id="customDurM" min="0" max="55" step="5" placeholder="0-55" style="width:70px;text-align:center;font-weight:700;" onfocus="onCustomDurFocus(this)" oninput="onCustomDurM(this)">
+            <input type="number" class="input" id="customDurM" min="0" max="59" step="1" placeholder="0-59" style="width:80px;text-align:center;font-weight:700;" onfocus="onCustomDurFocus(this)" oninput="onCustomDurM(this)">
             <span style="font-size:0.8125rem;color:var(--n-400);">分</span>
           </div>
           <button class="dur-btn dur-btn-fullday" data-dur="day" onclick="selectFullDay(this)" style="width:100%;margin-top:var(--sp-3);">
@@ -3607,11 +3607,9 @@ function onCustomDurH(input) {
 function onCustomDurM(input) {
   let val = parseInt(input.value);
   if (isNaN(val)) return;
-  // 分钟只能是 0/5/10/15/20/25/30/35/40/45/50/55
-  val = Math.round(val / 5) * 5;
+  // 分钟允许 0-59 任意整数，不再强制 5 分钟步进（现场情况复杂）
   if (val < 0) { val = 0; input.value = 0; }
-  if (val > 55) { val = 55; input.value = 55; }
-  input.value = val;
+  if (val > 59) { val = 59; input.value = 59; }
   selectedFullDay = false;
   input.closest('.field').querySelectorAll('.dur-btn').forEach(b => b.classList.remove('selected'));
 }
