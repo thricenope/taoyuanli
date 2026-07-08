@@ -4121,6 +4121,17 @@ function autoSaveCheck() {
 
 console.log('陶源里桌台管家 v1.1 已启动');
 
+// 注册 Service Worker — 实现强缓存（打开过一次后，后续秒开 + 离线可用）
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').then((reg) => {
+      console.log('Service Worker 已注册，页面已缓存');
+    }).catch((err) => {
+      console.log('Service Worker 注册失败:', err);
+    });
+  });
+}
+
 // 启动后检查是否有数据损坏被重置的桌台，提示用户
 if (_damagedTables.length > 0) {
   setTimeout(() => {
