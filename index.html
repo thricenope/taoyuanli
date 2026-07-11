@@ -422,6 +422,37 @@ body {
   transform: rotate(35deg);
 }
 
+/* 智能卡板标签 — 白色磨砂药丸，适配所有状态背景 */
+.tcard-smartcard {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(255, 255, 255, 0.82);
+  color: oklch(30% 0.01 250);
+  font-size: 0.625rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: var(--r-full);
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+  box-shadow: 0 1px 2px oklch(20% 0.01 250 / 0.12);
+}
+.tcard-smartcard-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: var(--r-full);
+  background: oklch(60% 0.22 300);
+  animation: blink 1.5s ease-in-out infinite;
+  flex-shrink: 0;
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tcard-smartcard-dot { animation: none; }
+}
+
 /* ============================================
    按钮
    ============================================ */
@@ -1593,7 +1624,7 @@ body {
       <div class="guide-step-num">1</div>
       <div>
         <strong>开台</strong><br>
-        <span style="color:var(--n-600);font-size:0.875rem;">点击任意空闲桌台卡片 → 选择时长（1/2/3小时按钮，或输入小时+分钟）→ 确认开台（操作员已自动填入）</span>
+        <span style="color:var(--n-600);font-size:0.875rem;">点击任意空闲桌台卡片 → 选择时长（1/2/3小时按钮，或输入小时+分钟）→ 如需租借智能卡板，勾选"智能卡板"开关 → 确认开台（操作员已自动填入）</span>
       </div>
     </div>
     <div class="guide-step">
@@ -1607,7 +1638,7 @@ body {
       <div class="guide-step-num">3</div>
       <div>
         <strong>清桌</strong><br>
-        <span style="color:var(--n-600);font-size:0.875rem;">顾客结束使用后，点击桌台 → 选择"清桌"，桌台恢复空闲状态，本次会话记录存入日志</span>
+        <span style="color:var(--n-600);font-size:0.875rem;">顾客结束使用后，点击桌台 → 选择"清桌"。若该桌台租借了智能卡板，会弹出归还确认，确认已归还后方可清桌。桌台恢复空闲状态，本次会话记录存入日志</span>
       </div>
     </div>
     <div class="guide-step">
@@ -1953,6 +1984,8 @@ function loadTables() {
           if (typeof t.durationHours !== 'number' || isNaN(t.durationHours)) t.durationHours = 0;
           // isFullDay 字段校验（老数据兼容）
           if (typeof t.isFullDay !== 'boolean') t.isFullDay = false;
+          // smartCard 字段校验（老数据兼容）
+          if (typeof t.smartCard !== 'boolean') t.smartCard = false;
           // 时间字段一致性（全天桌台不需要 endTime）
           if (t.status === 'active' && !t.isFullDay && (!t.startTime || !t.endTime)) {
             _damagedTables.push({ id, reason: '时间数据缺失' });
@@ -2489,7 +2522,8 @@ function createIdleTable(id) {
     operator: null,
     extensions: [],
     sessionId: null,
-    isFullDay: false
+    isFullDay: false,
+    smartCard: false  // 是否租借了智能卡板
   };
 }
 
@@ -2649,12 +2683,17 @@ function renderTableCard(table) {
     ? `<span class="tcard-duration">${table.isFullDay ? '全天' : '共' + formatDuration(table.durationHours)}</span>`
     : '';
 
+  const scBadge = table.smartCard ? `<span class="tcard-smartcard"><span class="tcard-smartcard-dot"></span>卡板</span>` : '';
+
   return `
     <div class="tcard ${state}" onclick="openActionModal('${table.id}')">
       ${extBadge}
       <div class="tcard-head">
         <div class="tcard-num">${esc(table.name)}</div>
-        <div class="tcard-status">${statusLabels[state]}</div>
+        <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end;">
+          <div class="tcard-status">${statusLabels[state]}</div>
+          ${scBadge}
+        </div>
       </div>
       <div class="tcard-time">${table.status !== 'idle' ? '从 ' + startTime + ' 开始' : '点击开台'}</div>
       <div class="tcard-remain numeric">${remaining}</div>
@@ -2996,11 +3035,13 @@ function renderLogs() {
 
     let desc = '';
     if (log.action === 'start') {
-      desc = `<strong>${esc(log.operator)}</strong> 开台 <strong>${esc(log.tableName)}</strong> · ${log.durationHours}小时`;
+      const scTag = log.smartCard ? ' · 📋智能卡板' : '';
+      desc = `<strong>${esc(log.operator)}</strong> 开台 <strong>${esc(log.tableName)}</strong> · ${log.durationHours}小时${scTag}`;
     } else if (log.action === 'extend') {
       desc = `<strong>${esc(log.operator)}</strong> 续时 <strong>${esc(log.tableName)}</strong> · +${log.extendHours}小时`;
     } else if (log.action === 'clear') {
-      desc = `<strong>${esc(log.operator)}</strong> 清桌 <strong>${esc(log.tableName)}</strong>`;
+      const scTag = log.smartCardReturned ? ' · 📋卡板已归还' : '';
+      desc = `<strong>${esc(log.operator)}</strong> 清桌 <strong>${esc(log.tableName)}</strong>${scTag}`;
     } else if (log.action === 'modify') {
       desc = `<strong>${esc(log.operator)}</strong> 修改时间 <strong>${esc(log.tableName)}</strong> · ${formatDuration(log.oldDuration)} → ${formatDuration(log.newDuration)}`;
     }
@@ -3021,6 +3062,10 @@ function renderLogs() {
 
 function exportLogs() {
   if (!checkAuth()) { showToast('请先登录操作员', 'error'); return; }
+  if (isAPK()) {
+    showToast('App 版暂不支持导出，请用网页版（thricenope.github.io/taoyuanli）导出日志', 'warn');
+    return;
+  }
   const dates = getAllLogDates();
   let allLogs = [];
   for (const d of dates) {
@@ -3029,26 +3074,32 @@ function exportLogs() {
   }
 
   // CSV 导出
-  let csv = '\uFEFF日期,时间,操作,桌台,操作员,详情\n';
+  let csv = '\uFEFF日期,时间,操作,桌台,操作员,详情,智能卡板\n';
   for (const log of allLogs) {
     const t = new Date(log.time);
     const time = t.toLocaleTimeString('zh-CN');
     const actionLabels = { start: '开台', extend: '续时', clear: '清桌', modify: '修改' };
     let detail = '';
-    if (log.action === 'start') detail = `${log.durationHours}小时`;
-    else if (log.action === 'extend') detail = `+${log.extendHours}小时`;
-    else if (log.action === 'modify') detail = `${formatDuration(log.oldDuration)}→${formatDuration(log.newDuration)}`;
-    csv += `${log.date},${time},${actionLabels[log.action] || log.action},${log.tableName || ''},${log.operator || ''},${detail}\n`;
+    let sc = '';
+    if (log.action === 'start') { detail = `${log.durationHours}小时`; sc = log.smartCard ? '租借' : ''; }
+    else if (log.action === 'extend') { detail = `+${log.extendHours}小时`; }
+    else if (log.action === 'modify') { detail = `${formatDuration(log.oldDuration)}→${formatDuration(log.newDuration)}`; }
+    else if (log.action === 'clear') { sc = log.smartCardReturned ? '已归还' : ''; }
+    csv += `${log.date},${time},${actionLabels[log.action] || log.action},${log.tableName || ''},${log.operator || ''},${detail},${sc}\n`;
   }
 
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `陶源里日志_${todayStr()}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-  showToast('日志已导出', 'success');
+  try {
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `陶源里日志_${todayStr()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('日志已导出', 'success');
+  } catch(e) {
+    showToast('导出失败，请用网页版操作', 'error');
+  }
 }
 
 // ============================================
@@ -3219,9 +3270,18 @@ function runAutoClean() {
   }
 }
 
+// 检测是否在 APK（Capacitor WebView）环境
+function isAPK() {
+  return location.hostname === 'localhost' && window.Capacitor && window.Capacitor.isNative;
+}
+
 function exportData() {
   if (!checkAuth()) { showToast('请先登录操作员', 'error'); return; }
   if (!isRoot()) { showToast('只有 ROOT 用户可导出数据', 'error'); return; }
+  if (isAPK()) {
+    showToast('App 版暂不支持导出，请用网页版（thricenope.github.io/taoyuanli）导出数据', 'warn');
+    return;
+  }
   const data = {
     config: config,
     tables: tables,
@@ -3233,19 +3293,27 @@ function exportData() {
     data.logs[d] = loadLogs(d);
   }
 
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `陶源里数据备份_${todayStr()}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-  showToast('数据已导出', 'success');
+  try {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `陶源里数据备份_${todayStr()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('数据已导出', 'success');
+  } catch(e) {
+    showToast('导出失败，请用网页版操作', 'error');
+  }
 }
 
 function importData(event) {
   if (!checkAuth()) { showToast('请先登录操作员', 'error'); return; }
   if (!isRoot()) { showToast('只有 ROOT 用户可导入数据', 'error'); return; }
+  if (isAPK()) {
+    showToast('App 版暂不支持导入，请用网页版（thricenope.github.io/taoyuanli）导入数据', 'warn');
+    return;
+  }
   const file = event.target.files[0];
   if (!file) return;
 
@@ -3362,6 +3430,19 @@ function openActionModal(tableId) {
             <span class="dur-sub fullday-sub">不限时，手动清桌结束</span>
           </button>
         </div>
+        <div style="margin-top:var(--sp-4);padding:var(--sp-3);background:var(--n-50);border-radius:var(--r-md);border:1px solid var(--n-200);">
+          <label style="display:flex;align-items:center;gap:var(--sp-3);cursor:pointer;">
+            <div style="position:relative;width:44px;height:24px;flex-shrink:0;">
+              <input type="checkbox" id="smartCardToggle" style="position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;" onchange="toggleSmartCardVisual(this)">
+              <div id="smartCardTrack" style="position:absolute;inset:0;background:var(--n-300);border-radius:var(--r-full);transition:background var(--dur-fast) var(--ease-out);"></div>
+              <div id="smartCardThumb" style="position:absolute;top:2px;left:2px;width:20px;height:20px;background:white;border-radius:var(--r-full);box-shadow:var(--sh-sm);transition:transform var(--dur-fast) var(--ease-out);"></div>
+            </div>
+            <div>
+              <div style="font-size:0.9375rem;font-weight:700;color:var(--n-700);">智能卡板</div>
+              <div style="font-size:0.75rem;color:var(--n-500);">勾选表示本次开台租借智能卡板，清桌时需确认归还</div>
+            </div>
+          </label>
+        </div>
       </div>
       <div class="modal-actions">
         <button class="btn btn-secondary" onclick="closeModal('actionModal')">取消</button>
@@ -3374,6 +3455,11 @@ function openActionModal(tableId) {
 
     // 全天桌台：简化弹窗，只显示信息和清桌
     if (table.isFullDay) {
+      const scInfo = table.smartCard ? `
+        <div style="margin-top:var(--sp-2);">
+          <div style="font-size:0.75rem;color:var(--n-400);">智能卡板</div>
+          <div style="font-size:1rem;font-weight:700;color:oklch(40% 0.12 145);">📋 已租借（使用中）</div>
+        </div>` : '';
       modal.innerHTML = `
         <div class="modal-title">${esc(table.name)} 号桌</div>
         <div class="modal-body">
@@ -3393,9 +3479,10 @@ function openActionModal(tableId) {
               <div style="font-size:0.75rem;color:var(--n-400);">操作员</div>
               <div style="font-size:1.125rem;font-weight:700;">${esc(table.operator)}</div>
             </div>
+            ${scInfo}
           </div>
           <div style="padding:var(--sp-3);background:var(--c-primary-bg);border-radius:var(--r-md);font-size:0.8125rem;color:var(--n-600);line-height:1.6;">
-            💡 全天模式不限时，顾客用完后点"清桌"结束即可。
+            💡 全天模式不限时，顾客用完后点"清桌"结束即可。${table.smartCard ? '清桌前需确认智能卡板已归还。' : ''}
           </div>
         </div>
         <div class="modal-actions" style="flex-direction:column;gap:var(--sp-2);">
@@ -3423,6 +3510,12 @@ function openActionModal(tableId) {
       overtime: { text: '超时 10 分钟+！请立即处理', color: 'var(--s-overtime)' },
     };
 
+    const scInfoHtml = table.smartCard ? `
+      <div style="margin-top:var(--sp-2);">
+        <div style="font-size:0.75rem;color:var(--n-400);">智能卡板</div>
+        <div style="font-size:1.0625rem;font-weight:700;color:oklch(40% 0.12 145);">📋 已租借（使用中）</div>
+      </div>` : '';
+
     modal.innerHTML = `
       <div class="modal-title">${esc(table.name)} 号桌</div>
       <div class="modal-body" style="padding-bottom:0;">
@@ -3446,6 +3539,7 @@ function openActionModal(tableId) {
             <div style="font-size:0.75rem;color:var(--n-400);">操作员</div>
             <div style="font-size:1.0625rem;font-weight:700;">${esc(table.operator)}</div>
           </div>
+          ${scInfoHtml}
         </div>
         ${extHistory}
       </div>
@@ -3471,7 +3565,7 @@ function openActionModal(tableId) {
       <div class="modal-actions" style="flex-direction:column;gap:var(--sp-2);margin-top:0;border-top:1px solid var(--n-100);padding-top:var(--sp-3);">
         <button class="btn btn-primary btn-lg" onclick="extendSession('${tableId}')">确认续时</button>
         <button class="btn btn-secondary" style="width:100%;" onclick="showModifyTime('${tableId}')">修改时间</button>
-        <button class="btn btn-danger" style="width:100%;" onclick="clearTableConfirm('${tableId}')">清桌（结束使用）</button>
+        <button class="btn btn-danger" style="width:100%;" onclick="clearTableConfirm('${tableId}')">清桌（结束使用）${table.smartCard ? ' · 需确认卡板归还' : ''}</button>
       </div>
     `;
 
@@ -3631,6 +3725,19 @@ function selectFullDay(btn) {
   if (cm) cm.value = '';
 }
 
+// 智能卡板开关 — 视觉反馈
+function toggleSmartCardVisual(checkbox) {
+  const track = document.getElementById('smartCardTrack');
+  const thumb = document.getElementById('smartCardThumb');
+  if (checkbox.checked) {
+    track.style.background = 'oklch(55% 0.15 145)';
+    thumb.style.transform = 'translateX(20px)';
+  } else {
+    track.style.background = 'var(--n-300)';
+    thumb.style.transform = 'translateX(0)';
+  }
+}
+
 function selectExtendDur(btn, hours) {
   btn.parentElement.querySelectorAll('.dur-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
@@ -3716,6 +3823,10 @@ function startSession(tableId) {
   table.extensions = [];
   table.sessionId = 'S' + now.getTime();
 
+  // 读取智能卡板开关
+  const scToggle = document.getElementById('smartCardToggle');
+  table.smartCard = scToggle ? scToggle.checked : false;
+
   if (selectedFullDay) {
     // 全天模式：不设 endTime，标记 isFullDay
     table.isFullDay = true;
@@ -3767,13 +3878,15 @@ function startSession(tableId) {
     tableName: table.name,
     operator: currentUser,
     durationHours: selectedFullDay ? 0 : table.durationHours,
-    isFullDay: selectedFullDay
+    isFullDay: selectedFullDay,
+    smartCard: table.smartCard
   });
 
   closeModal('actionModal');
   renderAll();
   const timeLabel = selectedFullDay ? '全天' : `${selectedDuration}小时`;
-  showToast(`${table.name} 号桌已开台 · ${timeLabel}`, 'success');
+  const scLabel = table.smartCard ? ' · 智能卡板' : '';
+  showToast(`${table.name} 号桌已开台 · ${timeLabel}${scLabel}`, 'success');
 }
 
 function extendSession(tableId) {
@@ -3831,13 +3944,79 @@ function clearTableConfirm(tableId) {
   const table = tables[tableId];
   if (!table) { showToast('桌台不存在', 'error'); return; }
 
-  // 直接清桌（用户已在操作弹窗里点了"清桌"按钮，不需要二次确认）
+  // 如果使用了智能卡板，需要先确认是否已归还
+  if (table.smartCard) {
+    showSmartCardReturnConfirm(tableId);
+    return;
+  }
+
+  // 直接清桌（无智能卡板，或已确认归还）
+  doClearTable(tableId);
+}
+
+// 智能卡板归还确认弹窗
+function showSmartCardReturnConfirm(tableId) {
+  const table = tables[tableId];
+  if (!table) return;
+  const modal = document.getElementById('actionModalContent');
+  const overlay = document.getElementById('actionModal');
+
+  modal.innerHTML = `
+    <div class="modal-title">智能卡板归还确认</div>
+    <div class="modal-body">
+      <div style="display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-4);background:oklch(55% 0.15 145 / 0.08);border-radius:var(--r-md);margin-bottom:var(--sp-3);">
+        <div style="font-size:2rem;">📋</div>
+        <div>
+          <div style="font-size:1rem;font-weight:700;color:var(--n-800);">${esc(table.name)} 号桌 · 智能卡板</div>
+          <div style="font-size:0.8125rem;color:var(--n-500);">该桌台开台时租借了智能卡板</div>
+        </div>
+      </div>
+      <div style="padding:var(--sp-3);background:var(--s-warn-bg);border-radius:var(--r-md);font-size:0.875rem;color:oklch(35% 0.10 75);line-height:1.6;margin-bottom:var(--sp-3);">
+        ⚠️ 请确认智能卡板已归还，归还后方可清桌。
+      </div>
+      <div style="font-size:0.8125rem;color:var(--n-500);text-align:center;">
+        智能卡板是否已归还？
+      </div>
+    </div>
+    <div class="modal-actions" style="flex-direction:column;gap:var(--sp-2);">
+      <button class="btn btn-primary btn-lg" onclick="confirmSmartCardReturned('${tableId}')">✅ 已归还，确认清桌</button>
+      <button class="btn btn-secondary" style="width:100%;" onclick="closeModal('actionModal')">❌ 未归还，返回</button>
+    </div>
+  `;
+
+  overlay.classList.add('show');
+}
+
+// 确认智能卡板已归还 → 执行清桌
+function confirmSmartCardReturned(tableId) {
+  const table = tables[tableId];
+  if (!table) return;
+  table.smartCard = false; // 标记已归还
   addLog('clear', {
     tableId,
     tableName: table.name,
     operator: currentUser,
-    durationHours: table.durationHours
+    durationHours: table.durationHours,
+    smartCardReturned: true
   });
+  doClearTable(tableId, true);
+}
+
+// 实际执行清桌逻辑
+function doClearTable(tableId, smartCardReturned) {
+  const table = tables[tableId];
+  if (!table) { showToast('桌台不存在', 'error'); return; }
+
+  // 如果没有经过智能卡板归还确认（即无智能卡板的情况），记录日志
+  if (!smartCardReturned) {
+    addLog('clear', {
+      tableId,
+      tableName: table.name,
+      operator: currentUser,
+      durationHours: table.durationHours,
+      smartCardReturned: table.smartCard ? true : null
+    });
+  }
 
   table.status = 'idle';
   table.startTime = null;
@@ -3847,6 +4026,7 @@ function clearTableConfirm(tableId) {
   table.extensions = [];
   table.sessionId = null;
   table.isFullDay = false;
+  table.smartCard = false;
 
   saveTables(tables);
   closeModal('actionModal');
@@ -4122,7 +4302,8 @@ function autoSaveCheck() {
 console.log('陶源里桌台管家 v1.1 已启动');
 
 // 注册 Service Worker — 实现强缓存（打开过一次后，后续秒开 + 离线可用）
-if ('serviceWorker' in navigator) {
+// APK 环境下跳过（file:/// 或 Capacitor 的 https://localhost 不支持 SW，且不需要缓存）
+if ('serviceWorker' in navigator && location.protocol.startsWith('http') && !location.hostname.includes('localhost')) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').then((reg) => {
       console.log('Service Worker 已注册，页面已缓存');
