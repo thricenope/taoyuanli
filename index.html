@@ -44,6 +44,9 @@
   --s-overtime: oklch(48% 0.20 28);  /* 超时>10min-深红 */
   --s-overtime-bg: oklch(50% 0.14 28);
 
+  --s-reserved:    oklch(55% 0.13 300);  /* 已预约-紫 */
+  --s-reserved-bg: oklch(94% 0.04 300);
+
   --c-success: oklch(60% 0.13 145);
   --c-danger:  oklch(55% 0.18 28);
   --c-info:    oklch(55% 0.12 240);
@@ -96,42 +99,58 @@ body {
 }
 
 /* ============================================
-   顶部导航
+   响应式导航 — 移动端（顶部条 + 底部栏）/ 桌面端（左侧栏）
+   一套 DOM，CSS 在 min-width:1024px 分叉
    ============================================ */
-.topbar {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: var(--n-50);
-  border-bottom: 1px solid var(--n-200);
-  display: flex;
-  flex-direction: column;
-  padding-top: var(--safe-top);
-  padding-left: var(--safe-left);
-  padding-right: var(--safe-right);
-}
+/* nav-shell：移动端不影响布局（子元素各自 fixed 脱离文档流），桌面端变固定左侧栏 */
+.nav-shell { display: contents; }
 
-.topbar-main {
+/* 顶部条：移动端固定顶部 */
+.nav-top {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 200;
   display: flex;
   align-items: center;
-  gap: var(--sp-4);
-  padding: var(--sp-3) var(--sp-5);
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  padding-top: calc(var(--sp-2) + var(--safe-top));
+  padding-left: calc(var(--sp-3) + var(--safe-left));
+  padding-right: calc(var(--sp-3) + var(--safe-right));
+  background: var(--n-50);
+  border-bottom: 1px solid var(--n-200);
+  box-shadow: 0 1px 8px oklch(20% 0.01 250 / 0.04);
+}
+
+/* 底部导航栏：移动端固定底部 */
+.app-nav {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 200;
+  background: var(--n-50);
+  border-top: 1px solid var(--n-200);
+  box-shadow: 0 -1px 8px oklch(20% 0.01 250 / 0.04);
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
+  padding-bottom: var(--safe-bottom);
 }
 
 .logo {
   display: flex;
   align-items: center;
   gap: var(--sp-2);
-  font-size: 1.25rem;
+  font-size: 1rem;
   font-weight: 800;
   color: var(--c-primary-dark);
   letter-spacing: -0.02em;
   white-space: nowrap;
+  flex-shrink: 0;
 }
+.logo-text { font-size: 0.9375rem; }
 
 .logo-dot {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: var(--r-full);
   background: var(--c-primary);
   box-shadow: 0 0 0 3px var(--c-primary-light);
@@ -170,43 +189,178 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-.tabbar {
+.nav-tools {
   display: flex;
-  gap: 0;
-  padding: 0 var(--sp-5);
-  overflow-x: auto;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-shrink: 0;
 }
-.tabbar::-webkit-scrollbar { display: none; }
 
-.tab {
-  padding: var(--sp-2) var(--sp-4);
+/* 导航项区：移动端横向 6 等分 */
+.nav-items {
+  display: flex;
+  align-items: stretch;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: var(--sp-2) 2px;
   background: none;
   border: none;
   font-family: inherit;
-  font-size: 0.9375rem;
+  font-size: 0.625rem;
   font-weight: 500;
   color: var(--n-500);
   cursor: pointer;
   position: relative;
   transition: color var(--dur-fast);
   white-space: nowrap;
-  flex-shrink: 0;
+  min-width: 0;
 }
-.tab.active {
+.nav-item:active { transform: scale(0.94); }
+
+.nav-icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.nav-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  text-align: center;
+}
+
+.nav-item.active {
   color: var(--c-primary-dark);
   font-weight: 700;
 }
-.tab.active::after {
+.nav-item.active .nav-icon {
+  transform: translateY(-1px);
+}
+/* 移动端 active 指示器：顶部短杠 */
+.nav-item.active::before {
   content: '';
   position: absolute;
-  bottom: 0;
-  left: var(--sp-4);
-  right: var(--sp-4);
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24px;
   height: 3px;
   background: var(--c-primary);
-  border-radius: 3px 3px 0 0;
+  border-radius: 0 0 3px 3px;
+}
+
+/* ============================================
+   桌面端（≥1024px）— 左侧纯导航栏 + 顶部横条
+   nav-top 独立成顶部条横跨内容区，nav-shell 只剩导航项
+   ============================================ */
+@media (min-width: 1024px) {
+  /* nav-shell：左侧纯导航栏（只含 app-nav 的导航项） */
+  .nav-shell {
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    width: 240px;
+    z-index: 200;
+    background: var(--n-50);
+    border-right: 1px solid var(--n-200);
+    box-shadow: 1px 0 12px oklch(20% 0.01 250 / 0.05);
+    padding-top: var(--safe-top);
+    padding-left: var(--safe-left);
+    padding-bottom: var(--safe-bottom);
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* nav-top：脱离 nav-shell，独立成顶部条横跨内容区（从侧边栏右侧开始） */
+  .nav-top {
+    position: fixed;
+    top: 0; left: 240px; right: 0;
+    z-index: 200;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--sp-4);
+    padding: var(--sp-3) var(--sp-5);
+    padding-top: calc(var(--sp-3) + var(--safe-top));
+    padding-left: var(--sp-5);
+    padding-right: calc(var(--sp-5) + var(--safe-right));
+    background: var(--n-50);
+    border-bottom: 1px solid var(--n-200);
+    box-shadow: 0 1px 8px oklch(20% 0.01 250 / 0.04);
+  }
+  .logo { font-size: 1.125rem; }
+  .logo-text { font-size: 1rem; }
+
+  .stats-strip {
+    flex: 1;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+
+  .nav-tools {
+    flex-shrink: 0;
+  }
+
+  /* app-nav：侧边栏内的导航段，占满全部高度 */
+  .app-nav {
+    position: static;
+    flex: 1;
+    border-top: none;
+    box-shadow: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    margin-top: var(--sp-3);
+  }
+
+  .nav-items {
+    flex-direction: column;
+    flex: 1;
+    max-width: none;
+    margin: 0;
+    padding: var(--sp-2) 0;
+    overflow-y: auto;
+  }
+
+  .nav-item {
+    flex: 0 0 auto;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: var(--sp-3);
+    padding: var(--sp-3) var(--sp-4);
+    margin: 2px var(--sp-2);
+    border-radius: var(--r-md);
+    font-size: 0.9375rem;
+  }
+  .nav-item:active { transform: none; }
+  .nav-item:hover { background: var(--n-100); }
+  .nav-icon { width: 20px; height: 20px; }
+  .nav-label { text-align: left; max-width: none; }
+
+  .nav-item.active {
+    background: var(--c-primary-bg);
+    color: var(--c-primary-dark);
+  }
+  .nav-item.active:hover { background: var(--c-primary-bg); }
+  /* 桌面端 active 指示器：左侧竖条 */
+  .nav-item.active::before {
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 60%;
+    border-radius: 0 3px 3px 0;
+  }
 }
 
 /* ============================================
@@ -214,9 +368,8 @@ body {
    ============================================ */
 .page {
   display: none;
-  padding: var(--sp-4) var(--sp-5) max(var(--sp-7), calc(var(--safe-bottom) + var(--sp-5)));
-  max-width: 1400px;
-  margin: 0 auto;
+  /* 移动端：顶部固定条(约 56px+safe-top) + 底部固定导航栏(约 64px+safe-bottom) 各预留空间 */
+  padding: calc(60px + var(--safe-top)) var(--sp-5) calc(76px + var(--safe-bottom));
   animation: pageIn var(--dur-mid) var(--ease-out);
 }
 .page.active { display: block; }
@@ -336,6 +489,9 @@ body {
 }
 .tcard.overtime::before { background: var(--s-overtime); }
 
+.tcard.reserved { background: var(--s-reserved-bg); border-color: var(--s-reserved); }
+.tcard.reserved::before { background: var(--s-reserved); }
+
 @keyframes pulse {
   0%, 100% { box-shadow: 0 0 0 0 oklch(48% 0.20 28 / 0.0); }
   50% { box-shadow: 0 0 0 4px oklch(48% 0.20 28 / 0.15); }
@@ -374,6 +530,7 @@ body {
 .tcard.warn .tcard-status { background: var(--s-warn); color: var(--n-800); }
 .tcard.expired .tcard-status { background: var(--s-expired); color: white; }
 .tcard.overtime .tcard-status { background: var(--s-overtime); color: white; }
+.tcard.reserved .tcard-status { background: var(--s-reserved); color: white; }
 
 .tcard-time {
   font-size: 0.8125rem;
@@ -393,6 +550,7 @@ body {
 .tcard.warn .tcard-remain { color: oklch(45% 0.15 75); }
 .tcard.expired .tcard-remain { color: var(--s-expired); }
 .tcard.overtime .tcard-remain { color: white; }
+.tcard.reserved .tcard-remain { color: var(--s-reserved); font-size: 0.9375rem; }
 
 .tcard-foot {
   display: flex;
@@ -1018,16 +1176,15 @@ body {
 
 /* 超小屏 — iPhone SE 等 */
 @media (max-width: 480px) {
-  .topbar-main { padding: var(--sp-2) var(--sp-2); gap: var(--sp-2); }
-  .logo { font-size: 1rem; }
-  .logo span:last-child { display: none; }
-  .logo::after { content: '管家'; font-size: 1rem; font-weight: 800; color: var(--c-primary-dark); }
+  .logo-text { display: none; }
   .logo-dot { width: 10px; height: 10px; box-shadow: 0 0 0 2px var(--c-primary-light); }
   .stat-chip { padding: 2px var(--sp-2); font-size: 0.75rem; }
   .stat-chip .chip-dot { width: 6px; height: 6px; }
   .stat-chip span:nth-child(2) { display: none; } /* 只显示数字 */
-  .tab { padding: var(--sp-2); font-size: 0.8125rem; }
-  .page { padding: var(--sp-2); padding-bottom: calc(var(--sp-7) + var(--safe-bottom)); }
+  .nav-item { padding: var(--sp-1) 2px; }
+  .nav-label { font-size: 0.5625rem; }
+  .nav-icon { width: 20px; height: 20px; }
+  .page { padding-top: calc(52px + var(--safe-top)); padding-bottom: calc(68px + var(--safe-bottom)); }
   .table-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: var(--sp-2); }
   .tcard { padding: var(--sp-2); border-radius: var(--r-md); }
   .tcard-num { font-size: 1.125rem; }
@@ -1057,53 +1214,52 @@ body {
 
 /* 普通手机竖屏 */
 @media (min-width: 481px) and (max-width: 600px) {
-  .topbar-main { padding: var(--sp-2) var(--sp-3); }
-  .page { padding: var(--sp-3); padding-bottom: calc(var(--sp-7) + var(--safe-bottom)); }
+  .page { padding-top: calc(56px + var(--safe-top)); padding-bottom: calc(70px + var(--safe-bottom)); }
   .table-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: var(--sp-2); }
   .tcard { padding: var(--sp-2); }
   .tcard-num { font-size: 1.25rem; }
-  .tab { padding: var(--sp-2) var(--sp-3); font-size: 0.875rem; }
   .log-item { grid-template-columns: 60px 1fr; }
   .log-item .log-action { grid-column: 2; justify-self: start; margin-top: 4px; }
 }
 
 /* 大屏手机 / 小平板竖屏 */
 @media (min-width: 601px) and (max-width: 768px) {
-  .page { padding: var(--sp-4); padding-bottom: calc(var(--sp-7) + var(--safe-bottom)); }
+  .page { padding-top: calc(56px + var(--safe-top)); padding-bottom: calc(70px + var(--safe-bottom)); }
   .table-grid { grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); }
 }
 
-/* 平板竖屏 (iPad mini/Pro 9.7 竖屏) */
-@media (min-width: 769px) and (max-width: 1024px) {
-  .page { padding: var(--sp-4) var(--sp-5); max-width: 900px; }
+/* 平板竖屏 (iPad mini/Pro 9.7 竖屏) — 仍是移动端底部栏 */
+@media (min-width: 769px) and (max-width: 1023px) {
+  .page { padding: var(--sp-4) var(--sp-5); padding-top: calc(56px + var(--safe-top)); padding-bottom: calc(70px + var(--safe-bottom)); }
   .table-grid { grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: var(--sp-3); }
   .tcard { padding: var(--sp-3); }
   .tcard-num { font-size: 1.375rem; }
   .tcard-remain { font-size: 1.125rem; }
 }
 
-/* 平板横屏 (iPad 横屏 / Surface) — 主力使用场景 */
-@media (min-width: 1025px) and (max-width: 1366px) {
-  .page { padding: var(--sp-4) var(--sp-6); max-width: 1200px; }
+/* 平板横屏 / 小桌面（≥1024px）— 左侧栏 + 顶部条，内容区右移下移 */
+@media (min-width: 1024px) and (max-width: 1366px) {
+  .page { padding: var(--sp-4) var(--sp-6); padding-top: calc(60px + var(--safe-top)); margin-left: 240px; }
   .table-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: var(--sp-3); }
   .tcard { padding: var(--sp-3); }
   .tcard-num { font-size: 1.5rem; }
   .tcard-remain { font-size: 1.25rem; }
-  .topbar-main { padding: var(--sp-3) var(--sp-6); }
 }
 
 /* 桌面大屏 */
 @media (min-width: 1367px) {
-  .page { max-width: 1400px; }
+  .page { padding: var(--sp-4) var(--sp-6); padding-top: calc(60px + var(--safe-top)); margin-left: 240px; }
   .table-grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
 }
 
 /* 横屏手机特殊处理 */
 @media (max-height: 500px) and (orientation: landscape) {
-  .topbar-main { padding: var(--sp-1) var(--sp-3); }
-  .logo { font-size: 1rem; }
-  .tab { padding: var(--sp-1) var(--sp-3); font-size: 0.8125rem; }
-  .page { padding: var(--sp-2) var(--sp-3); }
+  .nav-top { padding: var(--sp-1) var(--sp-3); }
+  .logo { font-size: 0.9375rem; }
+  .nav-item { padding: var(--sp-1) 2px; }
+  .nav-icon { width: 18px; height: 18px; }
+  .nav-label { font-size: 0.5625rem; }
+  .page { padding: var(--sp-2) var(--sp-3); padding-top: calc(44px + var(--safe-top)); padding-bottom: calc(60px + var(--safe-bottom)); }
   .table-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: var(--sp-2); }
   .tcard { padding: var(--sp-2); }
   .tcard-num { font-size: 1.125rem; }
@@ -1113,11 +1269,6 @@ body {
 /* 深色模式跟随系统 */
 @media (prefers-color-scheme: dark) {
   /* 暂不启用 — 保持浅色主题确保门店强光下可读性 */
-}
-
-/* 底部安全区留白 */
-.page {
-  padding-bottom: max(var(--sp-7), calc(var(--safe-bottom) + var(--sp-5)));
 }
 
 /* 模态框安全区适配 */
@@ -1406,14 +1557,17 @@ body {
 <!-- ============================================
      顶部导航
      ============================================ -->
-<div class="topbar">
-  <div class="topbar-main">
+<!-- 响应式导航骨架 -->
+<!-- 移动端：nav-top 固定顶部 + app-nav 固定底部（各自独立） -->
+<!-- 桌面端：nav-shell 合成左侧栏，内部 nav-top(顶部段) + app-nav(导航段) -->
+<div class="nav-shell">
+  <header class="nav-top" id="navTop">
     <div class="logo">
       <span class="logo-dot"></span>
-      <span>陶源里桌台管家</span>
+      <span class="logo-text">陶源里</span>
     </div>
     <div class="stats-strip" id="statsStrip"></div>
-    <div style="display:flex;align-items:center;gap:var(--sp-2);flex-shrink:0;">
+    <div class="nav-tools">
       <button class="mute-btn" id="muteBtn" onclick="toggleMute()" title="静音开关">🔔</button>
       <div class="user-bar" id="userBar" onclick="openSwitchModal()" style="display:none;">
         <div class="user-avatar" id="userAvatar">F</div>
@@ -1421,15 +1575,36 @@ body {
         <button class="user-logout" onclick="event.stopPropagation();logout()" title="登出">⏻</button>
       </div>
     </div>
-  </div>
-  <div class="tabbar" id="tabbar">
-    <button class="tab active" data-page="tables">桌台总览</button>
-    <button class="tab" data-page="filter">筛选统计</button>
-    <button class="tab" data-page="charts">图表</button>
-    <button class="tab" data-page="logs">操作日志</button>
-    <button class="tab" data-page="data">数据管理</button>
-    <button class="tab" data-page="guide">使用说明</button>
-  </div>
+  </header>
+
+  <nav class="app-nav" id="appNav">
+    <div class="nav-items" id="navItems">
+      <button class="nav-item active" data-page="tables">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <span class="nav-label">桌台总览</span>
+      </button>
+      <button class="nav-item" data-page="filter">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <span class="nav-label">筛选统计</span>
+      </button>
+      <button class="nav-item" data-page="charts">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6"/><rect x="12" y="8" width="3" height="10"/><rect x="17" y="5" width="3" height="13"/></svg>
+        <span class="nav-label">图表</span>
+      </button>
+      <button class="nav-item" data-page="logs">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h6"/></svg>
+        <span class="nav-label">操作日志</span>
+      </button>
+      <button class="nav-item" data-page="data">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg>
+        <span class="nav-label">数据管理</span>
+      </button>
+      <button class="nav-item" data-page="guide">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        <span class="nav-label">使用说明</span>
+      </button>
+    </div>
+  </nav>
 </div>
 
 <!-- ============================================
@@ -1439,7 +1614,7 @@ body {
   <div class="toolbar">
     <span class="toolbar-title" id="tablesTitle">桌台总览</span>
     <div class="toolbar-spacer"></div>
-    <button class="btn btn-primary btn-sm" onclick="addOneTable()" style="font-weight:700;gap:4px;"><span style="font-size:1.1rem;line-height:1;">＋</span> 添加桌台</button>
+    <button class="btn btn-primary btn-sm" onclick="openAddTablesModal()" style="font-weight:700;gap:4px;"><span style="font-size:1.1rem;line-height:1;">＋</span> 添加桌台</button>
     <button class="btn btn-ghost btn-sm" onclick="openConfigModal()">批量设置</button>
   </div>
   <div class="table-grid" id="tableGrid"></div>
@@ -1459,6 +1634,7 @@ body {
       <button class="pill active" data-filter="status" data-val="all">全部</button>
       <button class="pill" data-filter="status" data-val="idle">空闲</button>
       <button class="pill" data-filter="status" data-val="active">使用中</button>
+      <button class="pill" data-filter="status" data-val="reserved">已预约</button>
       <button class="pill" data-filter="status" data-val="warn">即将到期</button>
       <button class="pill" data-filter="status" data-val="expired">已到期</button>
       <button class="pill" data-filter="status" data-val="overtime">超时10分钟+</button>
@@ -1542,6 +1718,9 @@ body {
         <option value="start">开台</option>
         <option value="extend">续时</option>
         <option value="clear">清桌</option>
+        <option value="reserve">预约</option>
+        <option value="cancel_reservation">取消预约</option>
+        <option value="reservation_to_session">预约开台</option>
       </select>
     </div>
     <button class="btn btn-secondary btn-sm" onclick="exportLogs()">导出日志</button>
@@ -1662,6 +1841,10 @@ body {
         <div class="color-info"><strong>使用中</strong><span>剩余时间充足</span></div>
       </div>
       <div class="color-item">
+        <div class="color-swatch" style="background:var(--s-reserved-bg);border-color:var(--s-reserved);"></div>
+        <div class="color-info"><strong>已预约</strong><span>被预约占用，客户到店后转开台</span></div>
+      </div>
+      <div class="color-item">
         <div class="color-swatch" style="background:var(--s-warn-bg);border-color:var(--s-warn);"></div>
         <div class="color-info"><strong>即将到期</strong><span>剩余 ≤ 10 分钟</span></div>
       </div>
@@ -1680,7 +1863,8 @@ body {
     <h3>📊 功能说明</h3>
     <ul>
       <li><strong>桌台总览：</strong>所有桌台一览，点击操作。桌台较多时自动分页，滚动到底部点击"加载更多"</li>
-      <li><strong>添加桌台：</strong>点击"＋ 添加桌台"按钮，每次增加一张，自动跳转到新桌位置</li>
+      <li><strong>添加桌台：</strong>点击"＋ 添加桌台"按钮，可自定义数量批量添加（快捷按钮 +1/+5/+10/+20/+50/+100），自动从最大桌号顺延</li>
+      <li><strong>预约：</strong>空闲桌可预约（提前最多 7 天）。点桌 → 开台弹窗底部"📅 预约此桌"。预约按日期占用，客户到店后点"到店开台"开始计时；预约日期过后未到店会自动取消。</li>
       <li><strong>筛选统计：</strong>按状态/时长/提醒级别筛选桌台</li>
       <li><strong>图表：</strong>环形图看状态比例，柱状图看时长分布，点击可跳转筛选</li>
       <li><strong>操作日志：</strong>按操作员、日期、类型筛选查看，支持导出</li>
@@ -1705,7 +1889,7 @@ body {
     <h3>❓ 常见问题</h3>
     <p><strong>Q: 不小心关了页面怎么办？</strong><br>A: 重新打开即可，所有桌台状态和计时会自动恢复。</p>
     <br>
-    <p><strong>Q: 如何增加/减少桌台数量？</strong><br>A: 点击"添加桌台"按钮可以一张张增加；也可以在"批量设置"中直接设置总桌数。</p>
+    <p><strong>Q: 如何增加/减少桌台数量？</strong><br>A: 点击"添加桌台"按钮可批量添加（自定义数量）；也可以在"批量设置"中直接设置总桌数。</p>
     <br>
     <p><strong>Q: 到期了会怎样？</strong><br>A: 桌台颜色变红，顶部统计数字增加。<strong>到期</strong>响中频 2 声提示音（温和），<strong>超时</strong>响低频 3 声警报音（急促），听声就能分辨。每 30 秒重响直到处理。超时 10 分钟后桌台脉冲闪烁。可点顶部铃铛静音。</p>
     <br>
@@ -1735,7 +1919,37 @@ body {
 </div>
 
 <!-- 配置模态框 -->
-<div class="modal-overlay" id="configModal">
+<div class="modal-overlay" id="addTablesModal">
+  <div class="modal">
+    <div class="modal-title">批量添加桌台</div>
+    <div class="modal-body">
+      <div style="display:flex;align-items:center;gap:var(--sp-2);margin-bottom:var(--sp-4);padding:var(--sp-2) var(--sp-3);background:var(--c-primary-bg);border-radius:var(--r-md);font-size:0.875rem;color:var(--n-600);">
+        <span>当前已有</span>
+        <strong style="color:var(--c-primary-dark);" id="addTablesCurrent">0</strong>
+        <span>张桌台</span>
+      </div>
+      <div class="field">
+        <label class="field-label">添加数量</label>
+        <input type="number" class="input" id="addTablesCount" min="1" max="500" value="1" style="text-align:center;font-size:1.5rem;font-weight:700;" oninput="updateAddTablesPreview()">
+        <div style="display:flex;gap:var(--sp-2);margin-top:var(--sp-2);flex-wrap:wrap;">
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('addTablesCount').value=1;updateAddTablesPreview()">+1</button>
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('addTablesCount').value=5;updateAddTablesPreview()">+5</button>
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('addTablesCount').value=10;updateAddTablesPreview()">+10</button>
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('addTablesCount').value=20;updateAddTablesPreview()">+20</button>
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('addTablesCount').value=50;updateAddTablesPreview()">+50</button>
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('addTablesCount').value=100;updateAddTablesPreview()">+100</button>
+        </div>
+      </div>
+      <div id="addTablesPreview" style="margin-top:var(--sp-3);padding:var(--sp-3);background:var(--n-50);border-radius:var(--r-md);font-size:0.875rem;color:var(--n-600);line-height:1.6;">
+        预览：将添加 1 张桌台
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('addTablesModal')">取消</button>
+      <button class="btn btn-primary" onclick="confirmAddTables()">确认添加</button>
+    </div>
+  </div>
+</div>
   <div class="modal">
     <div class="modal-title">店铺设置</div>
     <div class="modal-body">
@@ -1785,7 +1999,8 @@ const DEFAULT_CONFIG = {
   tableCount: 100,
   operators: [], // 格式: [{name, status, createdAt}]  status: 'active'|'disabled'
   autoClean: false,
-  retentionDays: 2
+  retentionDays: 2,
+  reservationAdvanceDays: 7 // 预约最多提前天数，避免无限期堆积
 };
 const CURRENT_USER_KEY = 'pindou_current_user';
 
@@ -1972,9 +2187,8 @@ function loadTables() {
           // 必须有 id 和 name
           if (!t.id) t.id = id;
           if (!t.name) t.name = id;
-          // status 合法性
-          if (t.status !== 'idle' && t.status !== 'active') {
-            // status 异常但不是 idle/active，记录
+          // status 合法性（含预约状态 reserved）
+          if (t.status !== 'idle' && t.status !== 'active' && t.status !== 'reserved') {
             _damagedTables.push({ id, reason: '状态异常' });
             t.status = 'idle';
           }
@@ -1986,6 +2200,19 @@ function loadTables() {
           if (typeof t.isFullDay !== 'boolean') t.isFullDay = false;
           // smartCard 字段校验（老数据兼容）
           if (typeof t.smartCard !== 'boolean') t.smartCard = false;
+          // reservation 字段校验（老数据兼容，缺失或格式错 → null）
+          if (!t.reservation || typeof t.reservation !== 'object' || Array.isArray(t.reservation)) {
+            t.reservation = null;
+          }
+          // 预约状态但预约信息缺失 → 数据异常，重置为 idle
+          if (t.status === 'reserved' && !t.reservation) {
+            _damagedTables.push({ id, reason: '预约信息缺失' });
+            t.status = 'idle';
+          }
+          // 反向校验：idle/active 桌不应残留预约信息（孤儿 reservation）
+          if ((t.status === 'idle' || t.status === 'active') && t.reservation) {
+            t.reservation = null;
+          }
           // 时间字段一致性（全天桌台不需要 endTime）
           if (t.status === 'active' && !t.isFullDay && (!t.startTime || !t.endTime)) {
             _damagedTables.push({ id, reason: '时间数据缺失' });
@@ -2486,8 +2713,14 @@ function initTables() {
       }
       // extensions 必须是数组
       if (!Array.isArray(t.extensions)) { t.extensions = []; repaired = true; }
-      // status 必须合法
-      if (t.status !== 'idle' && t.status !== 'active') { t.status = 'idle'; repaired = true; }
+      // status 必须合法（含预约状态 reserved）
+      if (t.status !== 'idle' && t.status !== 'active' && t.status !== 'reserved') { t.status = 'idle'; repaired = true; }
+      // reservation 字段补全
+      if (t.reservation === undefined) { t.reservation = null; repaired = true; }
+      // reserved 状态但无预约信息 → 重置 idle
+      if (t.status === 'reserved' && !t.reservation) { t.status = 'idle'; repaired = true; }
+      // 反向校验：idle/active 桌不应残留预约信息（孤儿 reservation）
+      if ((t.status === 'idle' || t.status === 'active') && t.reservation) { t.reservation = null; repaired = true; }
       // 有 startTime 但缺 endTime，或反过来，重置为 idle
       if ((t.startTime && !t.endTime) || (!t.startTime && t.endTime)) {
         t.status = 'idle'; t.startTime = null; t.endTime = null;
@@ -2508,6 +2741,12 @@ function initTables() {
   // 之前的行为：减少桌数时删除空闲桌 → 会误删数据
   // 现在：只隐藏不删除（saveConfigData 保存 tableCount 控制显示范围）
   if (changed) saveTables(tables);
+
+  // 清理过期预约（预约日期 < 今天）— 启动时执行一次
+  const expiredRes = cleanExpiredReservations();
+  if (expiredRes > 0) {
+    showToast(`已自动清理 ${expiredRes} 个过期预约`, '');
+  }
 }
 
 // 创建空闲桌台的工厂函数 — 统一数据结构
@@ -2515,7 +2754,7 @@ function createIdleTable(id) {
   return {
     id: String(id),
     name: String(id),
-    status: 'idle',
+    status: 'idle',          // 'idle' | 'active' | 'reserved'
     startTime: null,
     endTime: null,
     durationHours: 0,
@@ -2523,7 +2762,8 @@ function createIdleTable(id) {
     extensions: [],
     sessionId: null,
     isFullDay: false,
-    smartCard: false  // 是否租借了智能卡板
+    smartCard: false,        // 是否租借了智能卡板
+    reservation: null        // 预约信息: { id, customerName, phone, date, mode, hours, operator, createdAt }
   };
 }
 
@@ -2531,6 +2771,8 @@ function createIdleTable(id) {
 // 计算桌台状态（根据时间）
 // ============================================
 function getTableState(table) {
+  // 预约状态优先级最高：有未到店预约 → reserved（不参与倒计时）
+  if (table.status === 'reserved' && table.reservation) return 'reserved';
   if (table.status === 'idle') return 'idle';
   // 全天桌台：永远是 active，不会有到期/超时
   if (table.isFullDay) return 'active';
@@ -2574,7 +2816,7 @@ function getRemainingTime(table) {
 // 渲染：顶部统计
 // ============================================
 function renderStats() {
-  let idle = 0, active = 0, warn = 0, expired = 0, overtime = 0;
+  let idle = 0, active = 0, warn = 0, expired = 0, overtime = 0, reserved = 0;
 
   for (const id in tables) {
     const num = parseInt(id);
@@ -2586,21 +2828,24 @@ function renderStats() {
     else if (state === 'warn') warn++;
     else if (state === 'expired') expired++;
     else if (state === 'overtime') overtime++;
+    else if (state === 'reserved') reserved++;
   }
 
   // 使用中 = 正常使用 + 即将到期（都是在用，预警不算到期）
+  // 注意：已预约是独立的占用类型，不计入"使用中"
   const inUse = active + warn;
-  const stats = { idle, active: inUse, warn, expired, overtime };
+  const stats = { idle, active: inUse, warn, expired, overtime, reserved };
 
   const strip = document.getElementById('statsStrip');
 
   // 如果结构不存在或数量变了，更新；否则只更新数字
   const chips = strip.querySelectorAll('.stat-chip');
-  if (chips.length !== 5) {
+  if (chips.length !== 6) {
     // 首次渲染结构
     const chipDefs = [
       { key: 'idle', label: '空闲', color: 'var(--s-idle)', filterData: { status: 'idle' } },
       { key: 'active', label: '使用中', color: 'var(--s-active)', filterData: { status: 'active' } },
+      { key: 'reserved', label: '已预约', color: 'var(--s-reserved)', filterData: { status: 'reserved' } },
       { key: 'warn', label: '即将到期', color: 'var(--s-warn)', filterData: { status: 'warn' } },
       { key: 'expired', label: '已到期', color: 'var(--s-expired)', filterData: { status: 'expired' } },
       { key: 'overtime', label: '超时', color: 'var(--s-overtime)', filterData: { status: 'overtime' } },
@@ -2666,22 +2911,35 @@ function formatDuration(hours) {
 
 function renderTableCard(table) {
   const state = getTableState(table);
-  const remaining = table.status === 'idle' ? '空闲' : getRemainingTime(table);
-  const startTime = table.startTime
-    ? new Date(table.startTime).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-    : '--:--';
-
   const statusLabels = {
     idle: '空闲', active: '使用中', warn: '即将到期',
-    expired: '已到期', overtime: '超时'
+    expired: '已到期', overtime: '超时', reserved: '已预约'
   };
+
+  // 预约桌：显示日期+模式作为"剩余"，时间行显示客户名
+  const isReserved = state === 'reserved' && table.reservation;
+  let remaining, timeLine, durBadge, footOperator;
+
+  if (isReserved) {
+    const r = table.reservation;
+    remaining = formatDateLabel(r.date) + ' · ' + (r.mode === 'fullday' ? '全天' : r.hours + 'h');
+    timeLine = esc(r.customerName);
+    durBadge = '';  // 预约不显示时长 badge
+    footOperator = r.operator || '';
+  } else {
+    remaining = table.status === 'idle' ? '空闲' : getRemainingTime(table);
+    const startTime = table.startTime
+      ? new Date(table.startTime).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+      : '--:--';
+    timeLine = table.status !== 'idle' ? '从 ' + startTime + ' 开始' : '点击开台';
+    durBadge = table.status !== 'idle'
+      ? `<span class="tcard-duration">${table.isFullDay ? '全天' : '共' + formatDuration(table.durationHours)}</span>`
+      : '';
+    footOperator = table.operator;
+  }
 
   const hasExtension = table.extensions && table.extensions.length > 0;
   const extBadge = hasExtension ? `<div class="tcard-extend-badge">续${table.extensions.length}</div>` : '';
-
-  const durBadge = table.status !== 'idle'
-    ? `<span class="tcard-duration">${table.isFullDay ? '全天' : '共' + formatDuration(table.durationHours)}</span>`
-    : '';
 
   const scBadge = table.smartCard ? `<span class="tcard-smartcard"><span class="tcard-smartcard-dot"></span>卡板</span>` : '';
 
@@ -2695,11 +2953,11 @@ function renderTableCard(table) {
           ${scBadge}
         </div>
       </div>
-      <div class="tcard-time">${table.status !== 'idle' ? '从 ' + startTime + ' 开始' : '点击开台'}</div>
+      <div class="tcard-time">${timeLine}</div>
       <div class="tcard-remain numeric">${remaining}</div>
       <div class="tcard-foot">
         ${durBadge}
-        ${table.operator ? `<span>${esc(table.operator)}</span>` : ''}
+        ${footOperator ? `<span>${esc(footOperator)}</span>` : ''}
       </div>
     </div>
   `;
@@ -2711,7 +2969,7 @@ function renderTables() {
   const ids = allIds.filter(n => n <= config.tableCount).map(String);
 
   if (ids.length === 0) {
-    grid.innerHTML = '<div class="empty"><div class="empty-icon">🪑</div><div class="empty-title">暂无桌台</div><div class="empty-desc">点击"添加桌台"开始使用</div></div>';
+    grid.innerHTML = '<div class="empty"><div class="empty-icon">🪑</div><div class="empty-title">暂无桌台</div><div class="empty-desc">点击"添加桌台"批量生成</div></div>';
     return;
   }
 
@@ -2745,40 +3003,93 @@ function loadMoreTables() {
 }
 
 function addOneTable() {
-  if (!checkAuth()) {
-    showToast('请先登录操作员', 'error');
+  // 兼容旧调用：转打开批量添加弹窗
+  openAddTablesModal();
+}
+
+// ============================================
+// 批量添加桌台
+// ============================================
+function openAddTablesModal() {
+  if (!checkAuth()) { showToast('请先登录操作员', 'error'); return; }
+  // 显示当前桌台数
+  const currentCount = Object.keys(tables).map(Number).filter(n => !isNaN(n) && n <= config.tableCount).length;
+  document.getElementById('addTablesCurrent').textContent = currentCount;
+  // 默认添加 1 张
+  document.getElementById('addTablesCount').value = 1;
+  updateAddTablesPreview();
+  document.getElementById('addTablesModal').classList.add('show');
+}
+
+// 实时预览：计算将添加的桌号范围
+function updateAddTablesPreview() {
+  const count = parseInt(document.getElementById('addTablesCount').value) || 0;
+  const preview = document.getElementById('addTablesPreview');
+  if (count <= 0) {
+    preview.innerHTML = '<span style="color:var(--c-danger);">请输入大于 0 的数量</span>';
     return;
   }
-  // 找当前最大桌号 +1
+  if (count > 500) {
+    preview.innerHTML = '<span style="color:var(--c-danger);">单次最多添加 500 张</span>';
+    return;
+  }
+  // 计算起止桌号（用 reduce 避免 Math.max(...ids) 在超大数组上栈溢出）
   const ids = Object.keys(tables).map(Number).filter(n => !isNaN(n));
   let nextNum = 1;
   if (ids.length > 0) {
-    let maxId = Math.max(...ids);
-    nextNum = maxId + 1;
+    nextNum = ids.reduce((a, b) => a > b ? a : b, 0) + 1;
+  }
+  const endNum = nextNum + count - 1;
+  const rangeText = count === 1 ? `${nextNum} 号桌` : `${nextNum} ~ ${endNum} 号`;
+  preview.innerHTML = `预览：将添加 <strong style="color:var(--c-primary-dark);">${count}</strong> 张桌台（${rangeText}）`;
+}
+
+// 确认批量添加
+function confirmAddTables() {
+  if (!checkAuth()) { showToast('请先登录操作员', 'error'); return; }
+  const count = parseInt(document.getElementById('addTablesCount').value) || 0;
+  if (count <= 0) { showToast('请输入大于 0 的数量', 'error'); return; }
+  if (count > 500) { showToast('单次最多添加 500 张', 'error'); return; }
+
+  // 找当前最大桌号 +1 作为起始（用 reduce 避免栈溢出）
+  const ids = Object.keys(tables).map(Number).filter(n => !isNaN(n));
+  let nextNum = 1;
+  if (ids.length > 0) {
+    nextNum = ids.reduce((a, b) => a > b ? a : b, 0) + 1;
+  }
+  const startNum = nextNum;
+  const endNum = nextNum + count - 1;
+
+  // 批量创建
+  for (let i = 0; i < count; i++) {
+    const id = String(nextNum + i);
+    if (!tables[id]) {
+      tables[id] = createIdleTable(id);
+    }
   }
 
-  const id = String(nextNum);
-  tables[id] = createIdleTable(id);
-  config.tableCount = Math.max(config.tableCount, nextNum);
+  // 更新桌台总数配置
+  config.tableCount = Math.max(config.tableCount, endNum);
   saveConfigData(config);
   saveTables(tables);
 
-  // 确保新桌台在分页可见范围内（否则添加后看不到）
-  if (nextNum > visibleTableCount) {
-    visibleTableCount = nextNum;
+  // 确保新桌台在分页可见范围内
+  if (endNum > visibleTableCount) {
+    visibleTableCount = endNum;
   }
 
+  closeModal('addTablesModal');
   renderAll();
-  showToast(`已添加 ${nextNum} 号桌`, 'success');
 
-  // 自动滚动到新桌台
+  const rangeText = count === 1 ? `${startNum} 号桌` : `${startNum}~${endNum} 号（共 ${count} 张）`;
+  showToast(`已添加 ${rangeText}`, 'success');
+
+  // 自动滚动到第一张新桌台
   setTimeout(() => {
     const grid = document.getElementById('tableGrid');
-    const newCard = grid.querySelector(`.tcard[onclick="openActionModal('${id}')"]`);
+    const newCard = grid.querySelector(`.tcard[onclick="openActionModal('${startNum}')"]`);
     if (newCard) {
       newCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    } else {
-      grid.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }, 100);
 }
@@ -2797,13 +3108,15 @@ function renderFilterGrid() {
     // 状态筛选
     if (currentFilter.status === 'idle' && state !== 'idle') return false;
     if (currentFilter.status === 'active' && state !== 'active' && state !== 'warn') return false;
+    if (currentFilter.status === 'reserved' && state !== 'reserved') return false;
     if (currentFilter.status === 'warn' && state !== 'warn') return false;
     if (currentFilter.status === 'expired' && state !== 'expired') return false;
     if (currentFilter.status === 'overtime' && state !== 'overtime') return false;
 
     // 时长筛选（按向下取整匹配 pill，如 1.5h 归到 1h）
     if (currentFilter.duration !== 'all') {
-      if (t.status === 'idle') return false;
+      // 空闲桌和预约桌不参与时长筛选（无实际使用时长）
+      if (t.status === 'idle' || t.status === 'reserved') return false;
       const floorH = Math.floor(t.durationHours);
       if (currentFilter.duration === '7+') {
         if (floorH < 7) return false;
@@ -2842,7 +3155,7 @@ function renderCharts() {
   const selectedDate = dateSelect.value;
 
   // === 1. 环形图：当前桌台实时状态分布（不受日期影响） ===
-  let idle = 0, active = 0, warn = 0, expired = 0, overtime = 0;
+  let idle = 0, active = 0, warn = 0, expired = 0, overtime = 0, reserved = 0;
   for (const id in tables) {
     const num = parseInt(id);
     if (num > config.tableCount) continue;
@@ -2853,13 +3166,15 @@ function renderCharts() {
     else if (state === 'warn') warn++;
     else if (state === 'expired') expired++;
     else if (state === 'overtime') overtime++;
+    else if (state === 'reserved') reserved++;
   }
-  const total = idle + active + warn + expired + overtime;
+  const total = idle + active + warn + expired + overtime + reserved;
   const inUse = active + warn;
 
   const segments = [
     { label: '空闲', val: idle, color: 'var(--s-idle)', filter: { status: 'idle' } },
     { label: '使用中', val: active, color: 'var(--s-active)', filter: { status: 'active' } },
+    { label: '已预约', val: reserved, color: 'var(--s-reserved)', filter: { status: 'reserved' } },
     { label: '即将到期', val: warn, color: 'var(--s-warn)', filter: { status: 'warn' } },
     { label: '已到期', val: expired, color: 'var(--s-expired)', filter: { status: 'expired' } },
     { label: '超时10min+', val: overtime, color: 'var(--s-overtime)', filter: { status: 'overtime' } },
@@ -3025,7 +3340,7 @@ function renderLogs() {
     return;
   }
 
-  const actionLabels = { start: '开台', extend: '续时', clear: '清桌', modify: '修改' };
+  const actionLabels = { start: '开台', extend: '续时', clear: '清桌', modify: '修改', reserve: '预约', cancel_reservation: '取消预约', reservation_to_session: '预约开台' };
 
   list.innerHTML = filtered.slice(0, 200).map(log => {
     const t = new Date(log.time);
@@ -3044,6 +3359,15 @@ function renderLogs() {
       desc = `<strong>${esc(log.operator)}</strong> 清桌 <strong>${esc(log.tableName)}</strong>${scTag}`;
     } else if (log.action === 'modify') {
       desc = `<strong>${esc(log.operator)}</strong> 修改时间 <strong>${esc(log.tableName)}</strong> · ${formatDuration(log.oldDuration)} → ${formatDuration(log.newDuration)}`;
+    } else if (log.action === 'reserve') {
+      const modeText = log.mode === 'fullday' ? '全天' : `${log.hours}小时`;
+      desc = `<strong>${esc(log.operator)}</strong> 预约 <strong>${esc(log.tableName)}</strong> · ${esc(log.customerName)} · ${esc(formatDateLabel(log.date))} ${modeText}`;
+    } else if (log.action === 'cancel_reservation') {
+      const expTag = log.autoExpired ? '（过期自动取消）' : '';
+      desc = `<strong>${esc(log.operator)}</strong> 取消预约 <strong>${esc(log.tableName)}</strong> · ${esc(log.customerName)} · ${esc(formatDateLabel(log.date))}${expTag}`;
+    } else if (log.action === 'reservation_to_session') {
+      const modeText = log.mode === 'fullday' ? '全天' : `${log.hours}小时`;
+      desc = `<strong>${esc(log.operator)}</strong> 预约开台 <strong>${esc(log.tableName)}</strong> · ${esc(log.customerName)} · 预约${esc(formatDateLabel(log.date))} ${modeText}`;
     }
 
     return `
@@ -3078,13 +3402,16 @@ function exportLogs() {
   for (const log of allLogs) {
     const t = new Date(log.time);
     const time = t.toLocaleTimeString('zh-CN');
-    const actionLabels = { start: '开台', extend: '续时', clear: '清桌', modify: '修改' };
+    const actionLabels = { start: '开台', extend: '续时', clear: '清桌', modify: '修改', reserve: '预约', cancel_reservation: '取消预约', reservation_to_session: '预约开台' };
     let detail = '';
     let sc = '';
     if (log.action === 'start') { detail = `${log.durationHours}小时`; sc = log.smartCard ? '租借' : ''; }
     else if (log.action === 'extend') { detail = `+${log.extendHours}小时`; }
     else if (log.action === 'modify') { detail = `${formatDuration(log.oldDuration)}→${formatDuration(log.newDuration)}`; }
     else if (log.action === 'clear') { sc = log.smartCardReturned ? '已归还' : ''; }
+    else if (log.action === 'reserve') { detail = `${log.customerName || ''} ${log.date || ''} ${log.mode === 'fullday' ? '全天' : (log.hours||0)+'小时'}`; }
+    else if (log.action === 'cancel_reservation') { detail = `${log.customerName || ''} ${log.date || ''}${log.autoExpired ? ' 过期自动取消' : ''}`; }
+    else if (log.action === 'reservation_to_session') { detail = `${log.customerName || ''} 预约${log.date || ''}`; }
     csv += `${log.date},${time},${actionLabels[log.action] || log.action},${log.tableName || ''},${log.operator || ''},${detail},${sc}\n`;
   }
 
@@ -3340,17 +3667,22 @@ function importData(event) {
               sanitized[id] = {
                 id: String(t.id || id),
                 name: String(t.name || id),
-                status: (t.status === 'active') ? 'active' : 'idle',
+                status: (t.status === 'active' || t.status === 'reserved') ? t.status : 'idle',
                 startTime: (typeof t.startTime === 'string') ? t.startTime : null,
                 endTime: (typeof t.endTime === 'string') ? t.endTime : null,
                 durationHours: (typeof t.durationHours === 'number' && !isNaN(t.durationHours)) ? t.durationHours : 0,
                 operator: (typeof t.operator === 'string') ? t.operator : null,
                 extensions: Array.isArray(t.extensions) ? t.extensions : [],
                 sessionId: t.sessionId ? String(t.sessionId) : null,
-                isFullDay: (typeof t.isFullDay === 'boolean') ? t.isFullDay : false
+                isFullDay: (typeof t.isFullDay === 'boolean') ? t.isFullDay : false,
+                reservation: (t.reservation && typeof t.reservation === 'object' && !Array.isArray(t.reservation)) ? t.reservation : null
               };
               // 时间一致性校验（全天桌台不需要 endTime）
               if (sanitized[id].status === 'active' && !sanitized[id].isFullDay && (!sanitized[id].startTime || !sanitized[id].endTime)) {
+                sanitized[id].status = 'idle';
+              }
+              // reserved 状态必须携带 reservation 信息，否则降级 idle
+              if (sanitized[id].status === 'reserved' && !sanitized[id].reservation) {
                 sanitized[id].status = 'idle';
               }
             }
@@ -3383,6 +3715,78 @@ function importData(event) {
 // ============================================
 // 操作模态框
 // ============================================
+// 打开预约表单（从开台弹窗的"预约此桌"按钮进入）
+function openReserveForm(tableId) {
+  const table = tables[tableId];
+  if (!table) return;
+  const modal = document.getElementById('actionModalContent');
+
+  // 默认值：明天，全天模式
+  window._reserveMode = 'fullday';
+  window._reserveHours = 0;
+
+  const today = new Date();
+  const tomorrow = new Date(today.getTime() + 86400000);
+  const maxDate = new Date(today.getTime() + (config.reservationAdvanceDays || 7) * 86400000);
+  const fmt = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const minDateStr = fmt(today);
+  const maxDateStr = fmt(maxDate);
+  const defaultDate = fmt(tomorrow);
+
+  modal.innerHTML = `
+    <div class="modal-title">预约 · ${esc(table.name)} 号桌</div>
+    <div class="modal-body">
+      <div style="display:flex;align-items:center;gap:var(--sp-2);margin-bottom:var(--sp-4);padding:var(--sp-2) var(--sp-3);background:var(--s-reserved-bg);border-radius:var(--r-md);">
+        <div class="user-avatar" style="width:32px;height:32px;font-size:0.875rem;">${esc(getInitial(currentUser))}</div>
+        <span style="font-size:0.875rem;color:var(--n-600);">操作员</span>
+        <strong style="font-size:0.9375rem;color:var(--s-reserved);">${esc(currentUser)}</strong>
+      </div>
+      <div class="field">
+        <label class="field-label">客户姓名 <span style="color:var(--c-danger);">*</span></label>
+        <input type="text" class="input" id="reserveName" placeholder="如：王先生" maxlength="20" style="width:100%;">
+      </div>
+      <div class="field" style="margin-top:var(--sp-3);">
+        <label class="field-label">联系电话（可选）</label>
+        <input type="tel" class="input" id="reservePhone" placeholder="点击详情页电话可直接拨打" maxlength="20" style="width:100%;">
+      </div>
+      <div class="field" style="margin-top:var(--sp-3);">
+        <label class="field-label">预约日期 <span style="color:var(--c-danger);">*</span></label>
+        <input type="date" class="input" id="reserveDate" value="${defaultDate}" min="${minDateStr}" max="${maxDateStr}" style="width:100%;">
+      </div>
+      <div class="field" style="margin-top:var(--sp-3);">
+        <label class="field-label">预约模式</label>
+        <div style="display:flex;gap:var(--sp-2);flex-wrap:wrap;">
+          <button class="dur-btn dur-btn-fullday selected" data-mode="fullday" onclick="selectReserveMode(this, 'fullday')" style="flex:1;min-width:140px;">
+            <span style="font-size:1rem;">🕐 全天</span>
+            <span class="dur-sub fullday-sub">不限时</span>
+          </button>
+          <button class="dur-btn" data-mode="hours" onclick="selectReserveMode(this, 'hours')" style="flex:1;min-width:140px;">
+            <span style="font-size:1rem;">⏱ 按小时</span>
+            <span class="dur-sub">预期时长</span>
+          </button>
+        </div>
+        <div id="reserveHoursWrap" style="display:none;margin-top:var(--sp-3);">
+          <div class="duration-options" style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-2);">
+            <button class="dur-btn" data-hours="1" onclick="selectReserveHours(this, 1)">1<span class="dur-sub">小时</span></button>
+            <button class="dur-btn" data-hours="2" onclick="selectReserveHours(this, 2)">2<span class="dur-sub">小时</span></button>
+            <button class="dur-btn" data-hours="3" onclick="selectReserveHours(this, 3)">3<span class="dur-sub">小时</span></button>
+            <button class="dur-btn" data-hours="4" onclick="selectReserveHours(this, 4)">4<span class="dur-sub">小时</span></button>
+            <button class="dur-btn" data-hours="5" onclick="selectReserveHours(this, 5)">5<span class="dur-sub">小时</span></button>
+            <button class="dur-btn" data-hours="6" onclick="selectReserveHours(this, 6)">6<span class="dur-sub">小时</span></button>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:var(--sp-4);padding:var(--sp-3);background:var(--c-primary-bg);border-radius:var(--r-md);font-size:0.8125rem;color:var(--n-600);line-height:1.6;">
+        💡 预约按日期占用，预约日期过后未到店将自动取消。客户到店后点"到店开台"开始计时。
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('actionModal')">取消</button>
+      <button class="btn btn-primary" style="background:var(--s-reserved);" onclick="createReservation('${tableId}')">确认预约</button>
+    </div>
+  `;
+}
+
 function openActionModal(tableId) {
   if (!checkAuth()) { showToast('请先登录操作员', 'error'); return; }
   const table = tables[tableId];
@@ -3447,6 +3851,57 @@ function openActionModal(tableId) {
       <div class="modal-actions">
         <button class="btn btn-secondary" onclick="closeModal('actionModal')">取消</button>
         <button class="btn btn-primary" onclick="startSession('${tableId}')">确认开台</button>
+      </div>
+      <button class="btn btn-secondary" style="width:100%;margin-top:var(--sp-2);color:var(--s-reserved);border-color:var(--s-reserved);" onclick="openReserveForm('${tableId}')">📅 预约此桌</button>
+    `;
+  } else if (table.status === 'reserved' && table.reservation) {
+    // 已预约桌台：显示预约详情 + 到店开台 / 取消预约
+    const r = table.reservation;
+    const modeText = r.mode === 'fullday' ? '🕐 全天' : `${r.hours} 小时`;
+    const phoneHtml = r.phone
+      ? `<a href="tel:${esc(r.phone)}" style="font-size:1rem;font-weight:700;color:var(--c-primary);text-decoration:none;">${esc(r.phone)}  📞</a>`
+      : '<span style="font-size:1rem;color:var(--n-400);">未填写</span>';
+    const createdStr = new Date(r.createdAt).toLocaleString('zh-CN', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+
+    modal.innerHTML = `
+      <div class="modal-title">${esc(table.name)} 号桌</div>
+      <div class="modal-body">
+        <div style="display:flex;align-items:center;gap:var(--sp-2);margin-bottom:var(--sp-3);padding:var(--sp-2) var(--sp-3);background:var(--s-reserved-bg);border-radius:var(--r-md);">
+          <span style="font-size:0.875rem;color:var(--s-reserved);font-weight:700;">📅 已预约 · ${esc(formatDateLabel(r.date))}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3);margin-bottom:var(--sp-3);">
+          <div>
+            <div style="font-size:0.75rem;color:var(--n-400);">客户姓名</div>
+            <div style="font-size:1.125rem;font-weight:700;">${esc(r.customerName)}</div>
+          </div>
+          <div>
+            <div style="font-size:0.75rem;color:var(--n-400);">联系电话</div>
+            <div>${phoneHtml}</div>
+          </div>
+          <div>
+            <div style="font-size:0.75rem;color:var(--n-400);">预约日期</div>
+            <div style="font-size:1.125rem;font-weight:700;font-variant-numeric:tabular-nums;">${esc(r.date)}</div>
+          </div>
+          <div>
+            <div style="font-size:0.75rem;color:var(--n-400);">模式</div>
+            <div style="font-size:1.125rem;font-weight:700;color:var(--s-reserved);">${modeText}</div>
+          </div>
+          <div>
+            <div style="font-size:0.75rem;color:var(--n-400);">预约操作员</div>
+            <div style="font-size:1rem;font-weight:700;">${esc(r.operator)}</div>
+          </div>
+          <div>
+            <div style="font-size:0.75rem;color:var(--n-400);">预约时间</div>
+            <div style="font-size:0.875rem;color:var(--n-600);">${createdStr}</div>
+          </div>
+        </div>
+        <div style="padding:var(--sp-3);background:var(--c-primary-bg);border-radius:var(--r-md);font-size:0.8125rem;color:var(--n-600);line-height:1.6;">
+          💡 客户到店后点"到店开台"开始计时。预约日期过后未到店将自动取消。
+        </div>
+      </div>
+      <div class="modal-actions" style="flex-direction:column;gap:var(--sp-2);">
+        <button class="btn btn-primary btn-lg" onclick="reservationToSession('${tableId}')">✓ 到店开台</button>
+        <button class="btn btn-secondary" style="width:100%;color:var(--c-danger);" onclick="cancelReservationConfirm('${tableId}')">取消预约</button>
       </div>
     `;
   } else {
@@ -3822,6 +4277,7 @@ function startSession(tableId) {
   table.operator = currentUser;
   table.extensions = [];
   table.sessionId = 'S' + now.getTime();
+  table.reservation = null; // 防御：开台时清掉可能残留的预约信息（idle 桌正常应为 null）
 
   // 读取智能卡板开关
   const scToggle = document.getElementById('smartCardToggle');
@@ -4027,11 +4483,259 @@ function doClearTable(tableId, smartCardReturned) {
   table.sessionId = null;
   table.isFullDay = false;
   table.smartCard = false;
+  table.reservation = null;
 
   saveTables(tables);
   closeModal('actionModal');
   renderAll();
   showToast(`${table.name} 号桌已清桌`, 'success');
+}
+
+// ============================================
+// 预约功能（预约 = 桌台的第 6 种状态）
+// 数据结构: table.reservation = { id, customerName, phone, date, mode, hours, operator, createdAt }
+// ============================================
+
+// 创建预约 — 从预约表单提交
+function createReservation(tableId) {
+  if (!checkAuth()) { showToast('请先登录操作员', 'error'); return; }
+  const table = tables[tableId];
+  if (!table) { showToast('桌台不存在', 'error'); return; }
+  // 仅空闲桌可预约（使用中/已预约都不允许）
+  if (table.status !== 'idle') { showToast('该桌台已被占用，无法预约', 'error'); return; }
+
+  // 读取表单
+  const customerName = (document.getElementById('reserveName').value || '').trim();
+  const phone = (document.getElementById('reservePhone').value || '').trim();
+  const date = document.getElementById('reserveDate').value;
+  const mode = window._reserveMode || 'fullday';   // 'fullday' | 'hours'
+  const hours = mode === 'hours' ? (window._reserveHours || 0) : 0;
+
+  if (!customerName) { showToast('请填写客户姓名', 'error'); return; }
+  if (!date) { showToast('请选择预约日期', 'error'); return; }
+  if (mode === 'hours' && hours <= 0) { showToast('请选择预约小时数', 'error'); return; }
+
+  const now = new Date();
+  table.status = 'reserved';
+  table.reservation = {
+    id: 'R' + now.getTime(),
+    customerName,
+    phone,
+    date,                 // 'YYYY-MM-DD'
+    mode,
+    hours,
+    operator: currentUser,
+    createdAt: now.toISOString()
+  };
+
+  saveTables(tables);
+
+  addLog('reserve', {
+    tableId,
+    tableName: table.name,
+    operator: currentUser,
+    customerName,
+    phone,
+    date,
+    mode,
+    hours
+  });
+
+  closeModal('actionModal');
+  renderAll();
+
+  const dateLabel = formatDateLabel(date);
+  const modeLabel = mode === 'fullday' ? '全天' : `${hours}小时`;
+  showToast(`${table.name} 号桌已预约 · ${customerName} · ${dateLabel} ${modeLabel}`, 'success');
+}
+
+// 预约到店 → 转开台
+// 复用 startSession 的计时逻辑；mode='hours' 时用预约的小时数预填
+function reservationToSession(tableId) {
+  if (!checkAuth()) { showToast('请先登录操作员', 'error'); return; }
+  initAudio();
+  const table = tables[tableId];
+  if (!table) { showToast('桌台不存在', 'error'); return; }
+  if (table.status !== 'reserved' || !table.reservation) {
+    showToast('该桌台无预约', 'error'); return;
+  }
+
+  const r = table.reservation;
+  const now = new Date();
+
+  // 先记一条"预约转开台"日志（在清空 reservation 之前）
+  const reserveInfo = {
+    customerName: r.customerName,
+    date: r.date,
+    mode: r.mode,
+    hours: r.hours
+  };
+
+  table.status = 'active';
+  table.startTime = now.toISOString();
+  table.operator = currentUser;
+  table.extensions = [];
+  table.sessionId = 'S' + now.getTime();
+  table.smartCard = false;
+
+  if (r.mode === 'fullday') {
+    table.isFullDay = true;
+    table.endTime = null;
+    table.durationHours = 0;
+  } else {
+    table.isFullDay = false;
+    const hours = r.hours > 0 ? r.hours : 1;
+    const end = new Date(now.getTime() + hours * 3600000);
+    table.endTime = end.toISOString();
+    table.durationHours = Number((hours).toFixed(2));
+  }
+
+  // 清空预约信息（开台已是事实占用）
+  table.reservation = null;
+
+  saveTables(tables);
+
+  addLog('reservation_to_session', {
+    tableId,
+    tableName: table.name,
+    operator: currentUser,
+    durationHours: table.durationHours,
+    isFullDay: table.isFullDay,
+    smartCard: table.smartCard,
+    ...reserveInfo
+  });
+
+  closeModal('actionModal');
+  renderAll();
+
+  const timeLabel = table.isFullDay ? '全天' : `${table.durationHours}小时`;
+  showToast(`${table.name} 号桌已开台（预约:${r.customerName}）· ${timeLabel}`, 'success');
+}
+
+// 取消预约 — 入口（带二次确认，仿 clearTableConfirm）
+function cancelReservationConfirm(tableId) {
+  if (!checkAuth()) { showToast('请先登录操作员', 'error'); return; }
+  const table = tables[tableId];
+  if (!table) { showToast('桌台不存在', 'error'); return; }
+  if (table.status !== 'reserved' || !table.reservation) {
+    showToast('该桌台无预约', 'error'); return;
+  }
+  showCancelReservationConfirm(tableId);
+}
+
+// 取消预约 — 二次确认弹窗
+function showCancelReservationConfirm(tableId) {
+  const table = tables[tableId];
+  if (!table) return;
+  const r = table.reservation;
+  const modal = document.getElementById('actionModalContent');
+  const overlay = document.getElementById('actionModal');
+
+  modal.innerHTML = `
+    <div class="modal-title">取消预约确认</div>
+    <div class="modal-body">
+      <div style="display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-4);background:var(--s-expired-bg);border-radius:var(--r-md);margin-bottom:var(--sp-3);">
+        <div style="font-size:2rem;">📅</div>
+        <div>
+          <div style="font-size:1rem;font-weight:700;color:var(--n-800);">${esc(table.name)} 号桌</div>
+          <div style="font-size:0.8125rem;color:var(--n-500);">${esc(r.customerName)}${r.phone ? ' · ' + esc(r.phone) : ''} · ${esc(formatDateLabel(r.date))}</div>
+        </div>
+      </div>
+      <div style="padding:var(--sp-3);background:var(--s-warn-bg);border-radius:var(--r-md);font-size:0.875rem;color:oklch(35% 0.10 75);line-height:1.6;">
+        ⚠️ 取消后该预约将无法恢复，桌台会回到空闲状态。
+      </div>
+    </div>
+    <div class="modal-actions" style="flex-direction:column;gap:var(--sp-2);">
+      <button class="btn btn-danger btn-lg" onclick="doCancelReservation('${tableId}')">确认取消预约</button>
+      <button class="btn btn-secondary" style="width:100%;" onclick="closeModal('actionModal')">返回</button>
+    </div>
+  `;
+
+  overlay.classList.add('show');
+}
+
+// 取消预约 — 实际执行
+function doCancelReservation(tableId, autoExpired) {
+  const table = tables[tableId];
+  if (!table) { showToast('桌台不存在', 'error'); return; }
+  if (table.status !== 'reserved' || !table.reservation) return;
+
+  const r = table.reservation;
+  // 自动清理时（启动/跨日期）currentUser 可能为 null，用'系统'标识
+  const op = (autoExpired === true && !currentUser) ? '系统' : currentUser;
+
+  // 注意：addLog 在 saveTables 之前调用，因为日志需要读取 r.customerName/r.date，
+  // 而 table.reservation 会在下面被清空。这与 doClearTable 的 clear 日志模式一致。
+  addLog('cancel_reservation', {
+    tableId,
+    tableName: table.name,
+    operator: op,
+    customerName: r.customerName,
+    date: r.date,
+    autoExpired: autoExpired === true ? true : null
+  });
+
+  table.status = 'idle';
+  table.reservation = null;
+
+  saveTables(tables);
+  closeModal('actionModal');
+  renderAll();
+
+  if (autoExpired === true) {
+    showToast(`${table.name} 号桌预约已过期自动取消`, '');
+  } else {
+    showToast(`${table.name} 号桌预约已取消`, 'success');
+  }
+}
+
+// 日期格式化为友好标签（"2026-07-22" → "7月22日" 或 "今天"/"明天"）
+function formatDateLabel(dateStr) {
+  if (!dateStr) return '';
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const target = new Date(dateStr + 'T00:00:00');
+  const diffDays = Math.round((target - today) / 86400000);
+  if (diffDays === 0) return '今天';
+  if (diffDays === 1) return '明天';
+  if (diffDays === -1) return '昨天';
+  return `${target.getMonth()+1}月${target.getDate()}日`;
+}
+
+// 预约表单：选择模式（全天 / N小时）
+function selectReserveMode(btn, mode) {
+  const wrap = btn.parentElement;
+  wrap.querySelectorAll('.dur-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  window._reserveMode = mode;
+  // 切换小时选择器显隐
+  const hoursWrap = document.getElementById('reserveHoursWrap');
+  if (hoursWrap) hoursWrap.style.display = mode === 'hours' ? '' : 'none';
+}
+
+// 预约表单：选择小时数
+function selectReserveHours(btn, hours) {
+  const wrap = btn.parentElement;
+  wrap.querySelectorAll('.dur-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  window._reserveHours = hours;
+}
+
+// 自动清理过期预约（启动时 + 跨日期时调用）
+// 到期定义：预约日期 < 今天
+function cleanExpiredReservations() {
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  let cleaned = 0;
+  for (const id in tables) {
+    const t = tables[id];
+    if (t.status === 'reserved' && t.reservation && t.reservation.date < todayStr) {
+      doCancelReservation(id, true);
+      cleaned++;
+    }
+  }
+  return cleaned;
 }
 
 // ============================================
@@ -4128,9 +4832,9 @@ function switchPage(pageName) {
     return;
   }
 
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelector(`.tab[data-page="${pageName}"]`).classList.add('active');
+  document.querySelector(`.nav-item[data-page="${pageName}"]`).classList.add('active');
   document.getElementById(`page-${pageName}`).classList.add('active');
 
   if (pageName === 'tables') { visibleTableCount = 50; renderTables(); }
@@ -4146,7 +4850,7 @@ function switchPage(pageName) {
 function renderAll() {
   renderStats();
   renderTables();
-  const activePage = document.querySelector('.tab.active').dataset.page;
+  const activePage = document.querySelector('.nav-item.active').dataset.page;
   if (activePage === 'filter') renderFilterGrid();
   if (activePage === 'charts') renderCharts();
   if (activePage === 'logs') renderLogs();
@@ -4156,7 +4860,7 @@ function renderAll() {
 // ============================================
 // 初始化
 // ============================================
-document.querySelectorAll('.tab').forEach(tab => {
+document.querySelectorAll('.nav-item').forEach(tab => {
   tab.addEventListener('click', () => switchPage(tab.dataset.page));
 });
 
@@ -4201,15 +4905,27 @@ if (savedUser && isActiveOperator(savedUser)) {
 }
 
 // 每秒更新桌台计时
+let _lastDateStr = todayStr();
 setInterval(() => {
-  const activePage = document.querySelector('.tab.active').dataset.page;
+  // 跨日期检查：日期变化时清理过期预约（每天触发一次）
+  const nowDateStr = todayStr();
+  if (nowDateStr !== _lastDateStr) {
+    _lastDateStr = nowDateStr;
+    const expiredRes = cleanExpiredReservations();
+    if (expiredRes > 0) {
+      showToast(`已自动清理 ${expiredRes} 个过期预约`, '');
+      renderAll();
+    }
+  }
+
+  const activePage = document.querySelector('.nav-item.active').dataset.page;
   if (activePage === 'tables' || activePage === 'filter') {
     // 只更新剩余时间文字，不重建整个 DOM（避免点击丢失和闪烁）
     const grid = activePage === 'tables' ? document.getElementById('tableGrid') : document.getElementById('filterGrid');
     const cards = grid.querySelectorAll('.tcard');
     const statusLabels = {
       idle: '空闲', active: '使用中', warn: '即将到期',
-      expired: '已到期', overtime: '超时'
+      expired: '已到期', overtime: '超时', reserved: '已预约'
     };
     cards.forEach(card => {
       const onclickAttr = card.getAttribute('onclick');
@@ -4218,14 +4934,15 @@ setInterval(() => {
       const tableId = match[1];
       const table = tables[tableId];
       if (!table || table.status === 'idle') return;
-      // 全天桌台不需要每秒更新倒计时
+      // 预约桌和全天桌台不需要每秒倒计时
       if (table.isFullDay) return;
+      if (table.status === 'reserved') return;
 
       const newState = getTableState(table);
       const oldClass = card.className;
 
       // 状态变化时只更新该卡片的 class 和状态文字，不重建整个 DOM
-      const stateClasses = ['idle','active','warn','expired','overtime'];
+      const stateClasses = ['idle','active','warn','expired','overtime','reserved'];
       const oldState = stateClasses.find(s => oldClass.includes(s));
       if (oldState !== newState) {
         // 移除旧状态 class，添加新状态 class
@@ -4342,6 +5059,15 @@ function checkAlerts() {
     const t = tables[id];
     if (t.status === 'idle') {
       alertedTables.delete(id);
+      delete lastAlertTime[id + '_expired'];
+      delete lastAlertTime[id + '_overtime'];
+      continue;
+    }
+    // 预约桌不参与到期提醒，清理可能残留的提醒标记后跳过
+    if (t.status === 'reserved') {
+      alertedTables.delete(id);
+      alertedTables.delete(id + '_expired');
+      alertedTables.delete(id + '_overtime');
       delete lastAlertTime[id + '_expired'];
       delete lastAlertTime[id + '_overtime'];
       continue;
