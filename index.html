@@ -444,173 +444,180 @@ body {
 }
 
 /* ============================================
-   桌台卡片
+   桌台卡片 — 翻转卡片（正面极简 + 背面详情+操作）
    ============================================ */
-.tcard {
+/* 翻转容器：网格内占位（固定高度，正反面都填满）*/
+.flip {
   position: relative;
-  background: white;
-  border: 2px solid var(--n-200);
-  border-radius: var(--r-lg);
-  padding: var(--sp-3);
+  height: 188px;
   cursor: pointer;
-  transition: transform var(--dur-fast) var(--ease-out), border-color var(--dur-fast);
+  outline: none;
+  perspective: 1200px;
+  -webkit-tap-highlight-color: transparent;
   user-select: none;
+}
+.flip:focus-visible { outline: 2px solid var(--c-primary); outline-offset: 2px; border-radius: var(--r-xl); }
+/* 旋转体 */
+.flip-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.6s var(--ease-out);
+  transform-style: preserve-3d;
+}
+.flip.flipped .flip-inner { transform: rotateY(180deg); }
+/* 正反面共用 */
+.face {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--r-xl);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
   overflow: hidden;
-  -webkit-tap-highlight-color: transparent; /* 移动端点击高亮 */
-  contain: layout style; /* 隔离重排重绘范围 */
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--sh-md);
 }
-.tcard:active { transform: scale(0.97); }
+.back { transform: rotateY(180deg); }
 
-/* 状态左边框 */
-.tcard::before {
-  content: '';
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 4px;
-  background: var(--s-idle);
-  transition: background var(--dur-fast);
-}
-
-.tcard.idle { background: var(--s-idle-bg); border-color: var(--n-200); }
-.tcard.idle::before { background: var(--s-idle); }
-
-.tcard.active { background: var(--s-active-bg); border-color: var(--s-active); }
-.tcard.active::before { background: var(--s-active); }
-
-.tcard.warn { background: var(--s-warn-bg); border-color: var(--s-warn); }
-.tcard.warn::before { background: var(--s-warn); }
-
-.tcard.expired { background: var(--s-expired-bg); border-color: var(--s-expired); }
-.tcard.expired::before { background: var(--s-expired); }
-
-.tcard.overtime {
-  background: var(--s-overtime-bg);
-  border-color: var(--s-overtime);
-  animation: pulse 2s ease-in-out infinite;
-}
-.tcard.overtime::before { background: var(--s-overtime); }
-
-.tcard.reserved { background: var(--s-reserved-bg); border-color: var(--s-reserved); }
-.tcard.reserved::before { background: var(--s-reserved); }
-
+/* 超时脉冲（整张卡呼吸）*/
+.flip.overtime .face { animation: pulse 2s ease-in-out infinite; }
 @keyframes pulse {
-  0%, 100% { box-shadow: 0 0 0 0 oklch(48% 0.20 28 / 0.0); }
-  50% { box-shadow: 0 0 0 4px oklch(48% 0.20 28 / 0.15); }
+  0%, 100% { box-shadow: var(--sh-md), 0 0 0 0 oklch(48% 0.20 28 / 0.0); }
+  50% { box-shadow: var(--sh-md), 0 0 0 4px oklch(48% 0.20 28 / 0.18); }
+}
+/* 状态点闪烁 */
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+/* —— 正面：极简（一眼扫全局）—— */
+.front { background: white; }
+/* 状态色条：渐变 */
+.f-bar { height: 6px; }
+.flip.idle .f-bar     { background: linear-gradient(90deg, var(--s-idle), oklch(86% 0.01 35)); }
+.flip.active .f-bar   { background: linear-gradient(90deg, var(--s-active), oklch(68% 0.15 220)); }
+.flip.warn .f-bar     { background: linear-gradient(90deg, var(--s-warn), oklch(80% 0.16 75)); }
+.flip.expired .f-bar  { background: linear-gradient(90deg, var(--s-expired), oklch(70% 0.20 28)); }
+.flip.overtime .f-bar { background: linear-gradient(90deg, var(--s-overtime), oklch(58% 0.22 28)); }
+.flip.reserved .f-bar { background: linear-gradient(90deg, var(--s-reserved), oklch(65% 0.15 300)); }
+
+.f-body { padding: var(--sp-3) var(--sp-3) var(--sp-2); flex: 1; display: flex; flex-direction: column; }
+.f-row { display: flex; align-items: center; justify-content: space-between; }
+.f-num {
+  font-size: 1.5rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1;
+  display: flex; align-items: center; gap: 5px;
+}
+.f-room-ic { font-size: 0.95rem; }
+/* 状态：小圆点 + 文字 */
+.f-state { font-size: 0.6875rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; color: var(--n-500); }
+.f-state::before { content: ''; width: 6px; height: 6px; border-radius: var(--r-full); background: var(--s-idle); flex-shrink: 0; }
+.flip.idle .f-state     { color: var(--n-500); }
+.flip.idle .f-state::before     { background: var(--s-idle); }
+.flip.active .f-state   { color: var(--s-active); }
+.flip.active .f-state::before   { background: var(--s-active); }
+.flip.warn .f-state     { color: oklch(42% 0.14 75); }
+.flip.warn .f-state::before     { background: var(--s-warn); }
+.flip.expired .f-state  { color: var(--s-expired); }
+.flip.expired .f-state::before  { background: var(--s-expired); }
+.flip.overtime .f-state { color: var(--s-overtime); }
+.flip.overtime .f-state::before { background: var(--s-overtime); animation: blink 1.5s infinite; }
+.flip.reserved .f-state { color: var(--s-reserved); }
+.flip.reserved .f-state::before { background: var(--s-reserved); }
+
+/* 倒计时区：居中放大 */
+.f-remain-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: var(--sp-1) 0; }
+.f-remain { font-size: 1.875rem; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.03em; line-height: 1; }
+.flip.idle .f-remain     { color: var(--n-300); font-size: 1rem; font-weight: 700; }
+.flip.active .f-remain   { color: var(--s-active); }
+.flip.warn .f-remain     { color: oklch(45% 0.16 75); }
+.flip.expired .f-remain  { color: var(--s-expired); }
+.flip.overtime .f-remain { color: var(--s-overtime); }
+.flip.reserved .f-remain { color: var(--s-reserved); font-size: 1.125rem; }
+.f-sub { font-size: 0.6875rem; color: var(--n-400); margin-top: 3px; }
+
+.f-foot { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.f-meta { font-size: 0.6875rem; color: var(--n-400); margin-left: auto; }
+.f-dur { font-size: 0.6875rem; font-weight: 600; color: var(--n-600); background: var(--n-100); padding: 1px 7px; border-radius: var(--r-sm); }
+
+/* 正面租品标签（只显示大板/小板）：带色圆点药丸 */
+.f-pill { display: inline-flex; align-items: center; gap: 4px; font-size: 0.6875rem; font-weight: 700; padding: 2px 8px; border-radius: var(--r-full); white-space: nowrap; line-height: 1.4; background: var(--n-100); color: var(--n-600); }
+.f-pill-dot { width: 6px; height: 6px; border-radius: var(--r-full); flex-shrink: 0; }
+.f-pill-big { background: oklch(94% 0.05 250); color: oklch(38% 0.12 250); }
+.f-pill-big .f-pill-dot { background: oklch(58% 0.20 250); }
+.f-pill-small { background: oklch(95% 0.05 55); color: oklch(40% 0.12 55); }
+.f-pill-small .f-pill-dot { background: oklch(65% 0.18 55); }
+
+/* 续时角标 — 右上角斜飘带 ribbon（保留原设计）*/
+.f-extend-badge {
+  position: absolute; top: var(--sp-2); right: -20px;
+  background: var(--c-primary); color: white;
+  font-size: 0.625rem; font-weight: 700;
+  padding: 1px 24px; transform: rotate(35deg); z-index: 3;
 }
 
+/* —— 背面：详情 + 操作 —— */
+.back { background: white; }
+.b-head { padding: var(--sp-2) var(--sp-3); color: white; display: flex; align-items: center; justify-content: space-between; }
+.flip.idle .b-head     { background: var(--s-idle); color: var(--n-700); }
+.flip.active .b-head   { background: var(--s-active); }
+.flip.warn .b-head     { background: var(--s-warn); color: var(--n-800); }
+.flip.expired .b-head  { background: var(--s-expired); }
+.flip.overtime .b-head { background: var(--s-overtime); }
+.flip.reserved .b-head { background: var(--s-reserved); }
+.b-title { font-size: 1rem; font-weight: 800; display: flex; align-items: center; gap: 5px; line-height: 1; }
+.b-state-tag { font-size: 0.6875rem; font-weight: 700; padding: 2px 8px; border-radius: var(--r-full); background: rgba(255,255,255,0.25); color: white; }
+.flip.idle .b-state-tag, .flip.warn .b-state-tag { background: rgba(0,0,0,0.12); color: var(--n-800); }
+
+.b-list { padding: var(--sp-2) var(--sp-3); flex: 1; display: flex; flex-direction: column; gap: 5px; overflow-y: auto; overflow-x: hidden; min-height: 0; }
+.b-list::-webkit-scrollbar { width: 4px; }
+.b-list::-webkit-scrollbar-thumb { background: oklch(70% 0.012 250 / 0.3); border-radius: var(--r-full); }
+.b-list { scrollbar-width: thin; }
+.b-row { display: flex; justify-content: space-between; align-items: baseline; gap: var(--sp-2); font-size: 0.75rem; line-height: 1.3; }
+.b-row .k { color: var(--n-400); flex-shrink: 0; }
+.b-row .v { color: var(--n-800); font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+.b-rentals { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+/* 背面租品小标签（详情列出全部租品，含智能卡板）*/
+.b-rental-pill { display: inline-flex; align-items: center; font-size: 0.625rem; font-weight: 600; padding: 1px 7px; border-radius: var(--r-full); background: var(--n-100); color: var(--n-600); white-space: nowrap; }
+
+.b-actions { padding: var(--sp-2) var(--sp-3) var(--sp-3); display: flex; gap: var(--sp-2); }
+.b-btn { flex: 1; font-size: 0.75rem; font-weight: 700; padding: var(--sp-2); min-height: 40px; border-radius: var(--r-md); border: none; cursor: pointer; text-align: center; transition: filter 0.15s; }
+.b-btn:active { filter: brightness(0.92); }
+.b-btn:focus-visible { outline: 2px solid var(--c-primary); outline-offset: 2px; }
+.b-btn-primary { background: var(--c-primary); color: white; }
+.b-btn-ghost { background: var(--n-100); color: var(--n-600); }
+.b-btn-danger { background: oklch(55% 0.18 28); color: white; }
+.b-room-actions { display: flex; gap: var(--sp-2); padding: 0 var(--sp-3) var(--sp-3); }
+.b-room-actions .b-btn { background: var(--n-100); color: var(--n-600); }
+
+/* 美化滚动条（整页）*/
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: oklch(70% 0.012 250 / 0.35); border-radius: var(--r-full); border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background: oklch(60% 0.012 250 / 0.5); background-clip: padding-box; }
+* { scrollbar-width: thin; scrollbar-color: oklch(70% 0.012 250 / 0.35) transparent; }
+
+/* 无障碍：尊重 prefers-reduced-motion — 翻转/脉冲/页面/弹窗/toast 动画全部降为瞬时 */
 @media (prefers-reduced-motion: reduce) {
-  .tcard.overtime { animation: none; }
-  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  .flip.overtime .face { animation: none; }
+  .flip.overtime .f-state::before { animation: none; }
 }
 
-.tcard-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: var(--sp-2);
-}
-
-.tcard-num {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: var(--n-800);
-  line-height: 1;
-  letter-spacing: -0.02em;
-}
-
-.tcard-status {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: var(--r-full);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-.tcard.idle .tcard-status { background: var(--n-200); color: var(--n-600); }
-.tcard.active .tcard-status { background: var(--s-active); color: white; }
-.tcard.warn .tcard-status { background: var(--s-warn); color: var(--n-800); }
-.tcard.expired .tcard-status { background: var(--s-expired); color: white; }
-.tcard.overtime .tcard-status { background: var(--s-overtime); color: white; }
-.tcard.reserved .tcard-status { background: var(--s-reserved); color: white; }
-
-.tcard-time {
-  font-size: 0.8125rem;
-  color: var(--n-600);
-  margin-bottom: var(--sp-1);
-}
-
-.tcard-remain {
-  font-size: 1.25rem;
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
-  line-height: 1.2;
-}
-.tcard.idle .tcard-remain { color: var(--n-400); font-weight: 500; font-size: 0.875rem; }
-.tcard.active .tcard-remain { color: var(--s-active); }
-.tcard.warn .tcard-remain { color: oklch(45% 0.15 75); }
-.tcard.expired .tcard-remain { color: var(--s-expired); }
-.tcard.overtime .tcard-remain { color: white; }
-.tcard.reserved .tcard-remain { color: var(--s-reserved); font-size: 0.9375rem; }
-
-.tcard-foot {
+/* 开台/预约弹窗：租品行（标签 + 三选按钮组） */
+.rental-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-top: var(--sp-2);
-  font-size: 0.75rem;
-  color: var(--n-500);
+  gap: var(--sp-3);
+  flex-wrap: wrap;
 }
-
-.tcard-duration {
-  background: oklch(20% 0.01 35 / 0.08);
-  padding: 1px 6px;
-  border-radius: var(--r-sm);
-  font-weight: 600;
-}
-
-.tcard-extend-badge {
-  position: absolute;
-  top: var(--sp-2);
-  right: -20px;
-  background: var(--c-primary);
-  color: white;
-  font-size: 0.625rem;
+.rental-label {
+  font-size: 0.9375rem;
   font-weight: 700;
-  padding: 1px 24px;
-  transform: rotate(35deg);
-}
-
-/* 智能卡板标签 — 白色磨砂药丸，适配所有状态背景 */
-.tcard-smartcard {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  background: rgba(255, 255, 255, 0.82);
-  color: oklch(30% 0.01 250);
-  font-size: 0.625rem;
-  font-weight: 700;
-  padding: 2px 7px;
-  border-radius: var(--r-full);
-  white-space: nowrap;
-  letter-spacing: 0.02em;
-  box-shadow: 0 1px 2px oklch(20% 0.01 250 / 0.12);
-}
-.tcard-smartcard-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: var(--r-full);
-  background: oklch(60% 0.22 300);
-  animation: blink 1.5s ease-in-out infinite;
+  color: var(--n-700);
   flex-shrink: 0;
+  min-width: 4em;
 }
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .tcard-smartcard-dot { animation: none; }
-}
+.rental-opts { display: flex; gap: var(--sp-2); flex: 1; min-width: 200px; }
+.rental-opt { flex: 1; padding: var(--sp-2) var(--sp-1); font-size: 0.8125rem; min-height: 38px; }
 
 /* ============================================
    按钮
@@ -1193,12 +1200,9 @@ body {
   .nav-icon { width: 20px; height: 20px; }
   .page { padding-top: calc(52px + var(--safe-top)); padding-bottom: calc(68px + var(--safe-bottom)); }
   .table-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: var(--sp-2); }
-  .tcard { padding: var(--sp-2); border-radius: var(--r-md); }
-  .tcard-num { font-size: 1.125rem; }
-  .tcard-remain { font-size: 0.9375rem; }
-  .tcard-time { font-size: 0.6875rem; }
-  .tcard-foot { font-size: 0.6875rem; }
-  .tcard-status { font-size: 0.625rem; padding: 1px 6px; }
+  .flip { height: 168px; }
+  .f-num { font-size: 1.125rem; }
+  .f-remain { font-size: 1.5rem; }
   .modal { padding: var(--sp-4); border-radius: var(--r-lg); max-height: 88vh; }
   .modal-title { font-size: 1.125rem; }
   .dur-btn { font-size: 1rem; padding: var(--sp-3) var(--sp-1); }
@@ -1223,8 +1227,7 @@ body {
 @media (min-width: 481px) and (max-width: 600px) {
   .page { padding-top: calc(56px + var(--safe-top)); padding-bottom: calc(70px + var(--safe-bottom)); }
   .table-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: var(--sp-2); }
-  .tcard { padding: var(--sp-2); }
-  .tcard-num { font-size: 1.25rem; }
+  .f-num { font-size: 1.25rem; }
   .log-item { grid-template-columns: 60px 1fr; }
   .log-item .log-action { grid-column: 2; justify-self: start; margin-top: 4px; }
 }
@@ -1239,18 +1242,16 @@ body {
 @media (min-width: 769px) and (max-width: 1023px) {
   .page { padding: var(--sp-4) var(--sp-5); padding-top: calc(56px + var(--safe-top)); padding-bottom: calc(70px + var(--safe-bottom)); }
   .table-grid { grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: var(--sp-3); }
-  .tcard { padding: var(--sp-3); }
-  .tcard-num { font-size: 1.375rem; }
-  .tcard-remain { font-size: 1.125rem; }
+  .f-num { font-size: 1.375rem; }
+  .f-remain { font-size: 1.75rem; }
 }
 
 /* 平板横屏 / 小桌面（≥1024px）— 左侧栏 + 顶部条，内容区右移下移 */
 @media (min-width: 1024px) and (max-width: 1366px) {
   .page { padding: var(--sp-4) var(--sp-6); padding-top: calc(60px + var(--safe-top)); margin-left: 240px; }
   .table-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: var(--sp-3); }
-  .tcard { padding: var(--sp-3); }
-  .tcard-num { font-size: 1.5rem; }
-  .tcard-remain { font-size: 1.25rem; }
+  .f-num { font-size: 1.5rem; }
+  .f-remain { font-size: 1.875rem; }
 }
 
 /* 桌面大屏 */
@@ -1268,8 +1269,9 @@ body {
   .nav-label { font-size: 0.5625rem; }
   .page { padding: var(--sp-2) var(--sp-3); padding-top: calc(44px + var(--safe-top)); padding-bottom: calc(60px + var(--safe-bottom)); }
   .table-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: var(--sp-2); }
-  .tcard { padding: var(--sp-2); }
-  .tcard-num { font-size: 1.125rem; }
+  .flip { height: 160px; }
+  .f-num { font-size: 1.125rem; }
+  .f-remain { font-size: 1.375rem; }
   .modal { max-height: 85vh; }
 }
 
@@ -1617,9 +1619,24 @@ body {
     <span class="toolbar-title" id="tablesTitle">桌台总览</span>
     <div class="toolbar-spacer"></div>
     <button class="btn btn-primary btn-sm" onclick="openAddTablesModal()" style="font-weight:700;gap:4px;"><span style="font-size:1.1rem;line-height:1;">＋</span> 添加桌台</button>
+    <button class="btn btn-ghost btn-sm" onclick="openAddRoomModal()" style="font-weight:700;gap:4px;"><span style="font-size:1.05rem;line-height:1;">🏠</span> 添加包间</button>
     <button class="btn btn-ghost btn-sm" onclick="openConfigModal()">批量设置</button>
   </div>
-  <div class="table-grid" id="tableGrid"></div>
+  <!-- 包间分区（无包间时隐藏） -->
+  <div id="roomsSection" style="display:none;margin-bottom:var(--sp-5);">
+    <div style="display:flex;align-items:center;gap:var(--sp-2);margin-bottom:var(--sp-3);">
+      <span class="section-title" style="margin:0;">🏠 包间</span>
+      <span style="font-size:0.75rem;color:var(--n-400);" id="roomsCount"></span>
+    </div>
+    <div class="table-grid" id="roomsGrid"></div>
+  </div>
+  <!-- 桌台分区 -->
+  <div id="tablesSection">
+    <div style="display:flex;align-items:center;gap:var(--sp-2);margin-bottom:var(--sp-3);">
+      <span class="section-title" style="margin:0;">🪑 桌台</span>
+    </div>
+    <div class="table-grid" id="tableGrid"></div>
+  </div>
 </div>
 
 <!-- ============================================
@@ -1654,6 +1671,17 @@ body {
       <button class="pill" data-filter="duration" data-val="5">5h</button>
       <button class="pill" data-filter="duration" data-val="6">6h</button>
       <button class="pill" data-filter="duration" data-val="7+">7h+</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <label class="field-label">按租品 <span style="font-size:0.75rem;color:var(--n-400);font-weight:400;">（大板/小板同属卡板，互斥）</span></label>
+    <div class="filter-pills" id="filterRental">
+      <button class="pill active" data-filter="rental" data-val="all">全部</button>
+      <button class="pill" data-filter="rental" data-val="smartcard">📋 智能卡板</button>
+      <button class="pill" data-filter="rental" data-val="big">🟦 大板</button>
+      <button class="pill" data-filter="rental" data-val="small">🟧 小板</button>
+      <button class="pill" data-filter="rental" data-val="none">无租品</button>
     </div>
   </div>
 
@@ -1805,7 +1833,7 @@ body {
       <div class="guide-step-num">1</div>
       <div>
         <strong>开台</strong><br>
-        <span style="color:var(--n-600);font-size:0.875rem;">点击任意空闲桌台卡片 → 选择时长（1/2/3小时按钮，或输入小时+分钟）→ 如需租借智能卡板，勾选"智能卡板"开关 → 确认开台（操作员已自动填入）</span>
+        <span style="color:var(--n-600);font-size:0.875rem;">点击任意空闲桌台/包间卡片 → 选择时长（1/2/3小时按钮，或输入小时+分钟）→ 如需租借，勾选"智能卡板"开关，或选择"大板/小板"（不租/不限板/一张板）→ 确认开台（操作员已自动填入）</span>
       </div>
     </div>
     <div class="guide-step">
@@ -1819,7 +1847,7 @@ body {
       <div class="guide-step-num">3</div>
       <div>
         <strong>清桌</strong><br>
-        <span style="color:var(--n-600);font-size:0.875rem;">顾客结束使用后，点击桌台 → 选择"清桌"。若该桌台租借了智能卡板，会弹出归还确认，确认已归还后方可清桌。桌台恢复空闲状态，本次会话记录存入日志</span>
+        <span style="color:var(--n-600);font-size:0.875rem;">顾客结束使用后，点击桌台/包间 → 选择"清桌"。若该桌租借了租品（智能卡板/大板/小板），会弹出归还确认，全部确认已归还后方可清桌。桌台恢复空闲状态，本次会话记录存入日志</span>
       </div>
     </div>
     <div class="guide-step">
@@ -1866,7 +1894,8 @@ body {
     <ul>
       <li><strong>桌台总览：</strong>所有桌台一览，点击操作。桌台较多时自动分页，滚动到底部点击"加载更多"</li>
       <li><strong>添加桌台：</strong>点击"＋ 添加桌台"按钮，可自定义数量批量添加（快捷按钮 +1/+5/+10/+20/+50/+100），自动从最大桌号顺延</li>
-      <li><strong>预约：</strong>空闲桌可预约（提前最多 7 天）。点桌 → 开台弹窗底部"📅 预约此桌"。预约按日期占用，客户到店后点"到店开台"开始计时；预约日期过后未到店会自动取消。</li>
+      <li><strong>添加包间：</strong>点击"🏠 添加包间"按钮，输入包间名称（可用逗号/换行一次添加多个）。包间与桌台分区显示，点击空闲包间卡片上的 ✎ 可改名、🗑 可删除。包间同样支持开台、预约、续时、清桌</li>
+      <li><strong>预约：</strong>空闲桌/包间可预约（提前最多 7 天）。点桌 → 开台弹窗底部"📅 预约此桌"，可选填租品（智能卡板/大板/小板）。预约按日期占用，客户到店后点"到店开台"开始计时，预约租品自动带入；预约日期过后未到店会自动取消。</li>
       <li><strong>筛选统计：</strong>按状态/时长/提醒级别筛选桌台</li>
       <li><strong>图表：</strong>环形图看状态比例，柱状图看时长分布，点击可跳转筛选</li>
       <li><strong>操作日志：</strong>按操作员、日期、类型筛选查看，支持导出</li>
@@ -2205,6 +2234,11 @@ function loadTables() {
           if (typeof t.isFullDay !== 'boolean') t.isFullDay = false;
           // smartCard 字段校验（老数据兼容）
           if (typeof t.smartCard !== 'boolean') t.smartCard = false;
+          // type 字段校验（老数据兼容：'table' | 'room'）
+          if (t.type !== 'table' && t.type !== 'room') t.type = 'table';
+          // bigBoard / smallBoard 字段校验（老数据兼容：'none' | 'unlimited' | 'one'）
+          if (t.bigBoard !== 'none' && t.bigBoard !== 'unlimited' && t.bigBoard !== 'one') t.bigBoard = 'none';
+          if (t.smallBoard !== 'none' && t.smallBoard !== 'unlimited' && t.smallBoard !== 'one') t.smallBoard = 'none';
           // reservation 字段校验（老数据兼容，缺失或格式错 → null）
           if (!t.reservation || typeof t.reservation !== 'object' || Array.isArray(t.reservation)) {
             t.reservation = null;
@@ -2341,7 +2375,7 @@ let config = migrateOperators(loadConfig());
 let tables = loadTables();
 let selectedDuration = 0;
 let selectedFullDay = false;
-let currentFilter = { status: 'all', duration: 'all' };
+let currentFilter = { status: 'all', duration: 'all', rental: 'all' };
 let currentUser = null; // 当前登录操作员
 let audioCtx = null; // 音频上下文（提前声明，避免 TDZ）
 let visibleTableCount = 50; // 桌台总览分页：当前显示数量
@@ -2768,7 +2802,10 @@ function createIdleTable(id) {
     sessionId: null,
     isFullDay: false,
     smartCard: false,        // 是否租借了智能卡板
-    reservation: null        // 预约信息: { id, customerName, phone, date, mode, hours, operator, createdAt }
+    type: 'table',           // 'table'（桌台） | 'room'（包间）
+    bigBoard: 'none',        // 大板: 'none'(不租) | 'unlimited'(不限板) | 'one'(一张板)
+    smallBoard: 'none',      // 小板: 'none'(不租) | 'unlimited'(不限板) | 'one'(一张板)
+    reservation: null        // 预约信息: { id, customerName, phone, date, mode, hours, operator, createdAt, smartCard, bigBoard, smallBoard }
   };
 }
 
@@ -2825,7 +2862,8 @@ function renderStats() {
 
   for (const id in tables) {
     const num = parseInt(id);
-    if (num > config.tableCount) continue; // 只统计范围内的桌台
+    // 超范围桌台不计；包间 id('RM*') 的 parseInt 为 NaN，NaN > N 为 false，故包间正常纳入统计
+    if (num > config.tableCount) continue;
     const t = tables[id];
     const state = getTableState(t);
     if (state === 'idle') idle++;
@@ -2882,7 +2920,7 @@ function jumpToFilter(filterData) {
   switchPage('filter');
 
   // 重置筛选条件
-  currentFilter = { status: 'all', duration: 'all' };
+  currentFilter = { status: 'all', duration: 'all', rental: 'all' };
   // 应用跳转带来的筛选
   for (const k in filterData) {
     currentFilter[k] = filterData[k];
@@ -2920,52 +2958,169 @@ function renderTableCard(table) {
     idle: '空闲', active: '使用中', warn: '即将到期',
     expired: '已到期', overtime: '超时', reserved: '已预约'
   };
-
-  // 预约桌：显示日期+模式作为"剩余"，时间行显示客户名
+  const room = isRoom(table);
   const isReserved = state === 'reserved' && table.reservation;
-  let remaining, timeLine, durBadge, footOperator;
+  const r = table.reservation;
+  const tid = table.id;
 
+  // —— 正面数据 ——
+  // 倒计时主文字 + 副文字
+  let remainText, subText, durText, footOperator;
   if (isReserved) {
-    const r = table.reservation;
-    remaining = formatDateLabel(r.date) + ' · ' + (r.mode === 'fullday' ? '全天' : r.hours + 'h');
-    timeLine = esc(r.customerName);
-    durBadge = '';  // 预约不显示时长 badge
-    footOperator = r.operator || '';
+    remainText = formatDateLabel(r.date) + ' · ' + (r.mode === 'fullday' ? '全天' : r.hours + 'h');
+    subText = esc(r.customerName);
+    durText = '';
+    footOperator = '预约：' + esc(r.operator || '');
+  } else if (table.status === 'idle') {
+    remainText = '空闲';
+    subText = '点击开台';
+    durText = '';
+    footOperator = '';
   } else {
-    remaining = table.status === 'idle' ? '空闲' : getRemainingTime(table);
-    const startTime = table.startTime
-      ? new Date(table.startTime).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-      : '--:--';
-    timeLine = table.status !== 'idle' ? '从 ' + startTime + ' 开始' : '点击开台';
-    durBadge = table.status !== 'idle'
-      ? `<span class="tcard-duration">${table.isFullDay ? '全天' : '共' + formatDuration(table.durationHours)}</span>`
-      : '';
-    footOperator = table.operator;
+    remainText = getRemainingTime(table);
+    const startTime = new Date(table.startTime).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+    subText = (table.isFullDay ? '全天 · ' : '') + '从 ' + startTime + ' 开始';
+    durText = table.isFullDay ? '全天' : formatDuration(table.durationHours);
+    footOperator = esc(table.operator || '');
   }
 
-  const hasExtension = table.extensions && table.extensions.length > 0;
-  const extBadge = hasExtension ? `<div class="tcard-extend-badge">续${table.extensions.length}</div>` : '';
+  // 租品徽章（正面只显示大板/小板，不显示智能卡板）
+  const bb = isReserved ? (r && r.bigBoard) : table.bigBoard;
+  const sb = isReserved ? (r && r.smallBoard) : table.smallBoard;
+  const bigBadge = (bb && bb !== 'none') ? `<span class="f-pill f-pill-big"><span class="f-pill-dot"></span>大板${bb === 'one' ? '×1' : ''}</span>` : '';
+  const smallBadge = (sb && sb !== 'none') ? `<span class="f-pill f-pill-small"><span class="f-pill-dot"></span>小板${sb === 'one' ? '×1' : ''}</span>` : '';
 
-  const scBadge = table.smartCard ? `<span class="tcard-smartcard"><span class="tcard-smartcard-dot"></span>卡板</span>` : '';
+  // 续时角标
+  const hasExtension = table.extensions && table.extensions.length > 0;
+  const extBadge = hasExtension ? `<div class="f-extend-badge">续${table.extensions.length}</div>` : '';
+
+  // 桌号显示（包间带🏠）
+  const numHtml = (room ? '<span class="f-room-ic">🏠</span>' : '') + esc(table.name);
+
+  // —— 背面数据：详情行 ——
+  const detailRows = buildCardDetailRows(table, state, isReserved, r);
+
+  // —— 背面操作按钮（接现有弹窗 openActionModal）——
+  let actionBtns;
+  if (isReserved) {
+    actionBtns = `<button class="b-btn b-btn-primary" onclick="event.stopPropagation();openActionModal('${tid}')">到店开台 / 取消</button>`;
+  } else if (table.status === 'idle') {
+    if (room) {
+      actionBtns = `<button class="b-btn b-btn-primary" onclick="event.stopPropagation();openActionModal('${tid}')">开台</button>`;
+    } else {
+      actionBtns = `<button class="b-btn b-btn-primary" onclick="event.stopPropagation();openActionModal('${tid}')">开台 / 预约</button>`;
+    }
+  } else {
+    // 使用中/到期/超时：续时、清桌等都在 openActionModal 里
+    actionBtns = `<button class="b-btn b-btn-primary" onclick="event.stopPropagation();openActionModal('${tid}')">续时 / 清桌</button>`;
+  }
+
+  // 包间改名/删除（仅空闲，放背面操作下方）
+  const roomActions = (room && table.status === 'idle')
+    ? `<div class="b-room-actions">` +
+      `<button class="b-btn" onclick="event.stopPropagation();renameRoomPrompt('${tid}', event)">✎ 改名</button>` +
+      `<button class="b-btn b-btn-danger" onclick="event.stopPropagation();deleteRoomPrompt('${tid}', event)">🗑 删除</button>` +
+      `</div>`
+    : '';
 
   return `
-    <div class="tcard ${state}" onclick="openActionModal('${table.id}')">
-      ${extBadge}
-      <div class="tcard-head">
-        <div class="tcard-num">${esc(table.name)}</div>
-        <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end;">
-          <div class="tcard-status">${statusLabels[state]}</div>
-          ${scBadge}
+    <div class="flip ${state}" data-tid="${esc(tid)}" tabindex="0" role="button"
+         aria-label="${room ? '包间' : '桌台'} ${esc(table.name)}，${statusLabels[state]}，点击查看详情"
+         onclick="flipCard(this)"
+         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();flipCard(this)}">
+      <div class="flip-inner">
+        <!-- 正面 -->
+        <div class="face front">
+          ${extBadge}
+          <div class="f-bar"></div>
+          <div class="f-body">
+            <div class="f-row">
+              <div class="f-num">${numHtml}</div>
+              <div class="f-state">${statusLabels[state]}</div>
+            </div>
+            <div class="f-remain-wrap">
+              <div class="f-remain">${remainText}</div>
+              <div class="f-sub">${subText}</div>
+            </div>
+            <div class="f-foot">
+              ${bigBadge}${smallBadge}
+              ${durText ? `<span class="f-dur">${durText}</span>` : ''}
+              ${footOperator ? `<span class="f-meta">${footOperator}</span>` : ''}
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="tcard-time">${timeLine}</div>
-      <div class="tcard-remain numeric">${remaining}</div>
-      <div class="tcard-foot">
-        ${durBadge}
-        ${footOperator ? `<span>${esc(footOperator)}</span>` : ''}
+        <!-- 背面 -->
+        <div class="face back">
+          <div class="b-head">
+            <div class="b-title">${numHtml}</div>
+            <div class="b-state-tag">${statusLabels[state]}</div>
+          </div>
+          <div class="b-list">${detailRows}</div>
+          <div class="b-actions">${actionBtns}</div>
+          ${roomActions}
+        </div>
       </div>
     </div>
   `;
+}
+
+// 翻转卡片（toggle 翻转状态）
+function flipCard(el) {
+  if (!el || !el.classList.contains('flip')) return;
+  el.classList.toggle('flipped');
+}
+
+// 构建背面详情行（复用现有数据，不依赖外部函数避免循环）
+function buildCardDetailRows(table, state, isReserved, r) {
+  const rows = [];
+  const row = (k, v) => `<div class="b-row"><span class="k">${k}</span><span class="v">${v}</span></div>`;
+
+  if (isReserved) {
+    rows.push(row('客户', esc(r.customerName || '-')));
+    if (r.phone) rows.push(row('电话', `<a href="tel:${esc(r.phone)}" onclick="event.stopPropagation()" style="color:var(--c-primary)">${esc(r.phone)}</a>`));
+    rows.push(row('日期', esc(r.date || '')));
+    rows.push(row('模式', r.mode === 'fullday' ? '全天' : (r.hours + '小时')));
+    rows.push(row('预约人', esc(r.operator || '')));
+    // 预约租品
+    const resItems = [];
+    if (r.smartCard) resItems.push('<span class="b-rental-pill">智能卡板</span>');
+    if (r.bigBoard === 'one') resItems.push('<span class="b-rental-pill">大板×1</span>');
+    else if (r.bigBoard === 'unlimited') resItems.push('<span class="b-rental-pill">大板</span>');
+    if (r.smallBoard === 'one') resItems.push('<span class="b-rental-pill">小板×1</span>');
+    else if (r.smallBoard === 'unlimited') resItems.push('<span class="b-rental-pill">小板</span>');
+    if (resItems.length) rows.push(`<div class="b-row"><span class="k">租品</span><span class="v b-rentals">${resItems.join('')}</span></div>`);
+  } else if (table.status === 'idle') {
+    rows.push(row('状态', '空闲'));
+    if (isRoom(table)) rows.push(row('类型', '包间'));
+  } else {
+    const startTime = new Date(table.startTime).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+    rows.push(row('开始', startTime));
+    if (!table.isFullDay) {
+      const endTime = new Date(table.endTime).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+      rows.push(row('到期', endTime));
+      rows.push(row('时长', '共 ' + formatDuration(table.durationHours)));
+    } else {
+      rows.push(row('模式', '全天'));
+    }
+    if (table.extensions && table.extensions.length > 0) {
+      rows.push(row('续时', table.extensions.length + ' 次'));
+    }
+    rows.push(row('操作员', esc(table.operator || '-')));
+    // 使用中租品（含智能卡板）
+    const useItems = [];
+    if (table.smartCard) useItems.push('<span class="b-rental-pill">智能卡板</span>');
+    if (table.bigBoard === 'one') useItems.push('<span class="b-rental-pill">大板×1</span>');
+    else if (table.bigBoard === 'unlimited') useItems.push('<span class="b-rental-pill">大板</span>');
+    if (table.smallBoard === 'one') useItems.push('<span class="b-rental-pill">小板×1</span>');
+    else if (table.smallBoard === 'unlimited') useItems.push('<span class="b-rental-pill">小板</span>');
+    if (useItems.length) rows.push(`<div class="b-row"><span class="k">租品</span><span class="v b-rentals">${useItems.join('')}</span></div>`);
+  }
+  return rows.join('');
+}
+
+// 渲染包间卡片：翻转结构已内置包间支持，直接复用 renderTableCard
+function renderRoomCard(table) {
+  return renderTableCard(table);
 }
 
 function renderTables() {
@@ -3092,12 +3247,224 @@ function confirmAddTables() {
   // 自动滚动到第一张新桌台
   setTimeout(() => {
     const grid = document.getElementById('tableGrid');
-    const newCard = grid.querySelector(`.tcard[onclick="openActionModal('${startNum}')"]`);
+    const newCard = grid.querySelector(`.flip[data-tid="${startNum}"]`);
     if (newCard) {
       newCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }, 100);
 }
+
+// ============================================
+// 包间管理（包间复用 tables 结构，type='room' 区分）
+// ============================================
+
+// 判断桌台对象是否为包间
+function isRoom(t) { return t && t.type === 'room'; }
+
+// 单位标签：包间显示「包间 名称」，桌台显示「名称 号桌」
+// 用于弹窗标题 / toast，统一区分包间与桌台
+function unitLabel(table) {
+  return isRoom(table) ? `包间「${esc(table.name)}」` : `${esc(table.name)} 号桌`;
+}
+// 单位纯文本（toast 用，无 esc 包装，table.name 已是受控输入）
+function unitText(table) {
+  return isRoom(table) ? `包间「${table.name}」` : `${table.name} 号桌`;
+}
+
+// 生成唯一的包间 id（'RM' + 时间戳 + 随机后缀，避免并发碰撞）
+function genRoomId() {
+  return 'RM' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+}
+
+// 创建包间（复用 createIdleTable 字段 + type='room' + 自定义名称）
+function createRoom(name) {
+  const r = createIdleTable(genRoomId());
+  r.type = 'room';
+  r.name = String(name || '包间');
+  return r;
+}
+
+// 打开「添加包间」弹窗
+function openAddRoomModal() {
+  if (!checkAuth()) { showToast('请先登录操作员', 'error'); return; }
+  const modal = document.getElementById('actionModalContent');
+  const overlay = document.getElementById('actionModal');
+
+  // 当前已有包间数
+  const roomCount = Object.values(tables).filter(isRoom).length;
+
+  modal.innerHTML = `
+    <div class="modal-title">🏠 添加包间</div>
+    <div class="modal-body">
+      <div style="display:flex;align-items:center;gap:var(--sp-2);margin-bottom:var(--sp-4);padding:var(--sp-2) var(--sp-3);background:var(--c-primary-bg);border-radius:var(--r-md);font-size:0.875rem;color:var(--n-600);">
+        <span>当前已有</span>
+        <strong style="color:var(--c-primary-dark);" id="addRoomsCurrent">${roomCount}</strong>
+        <span>个包间</span>
+      </div>
+      <div class="field">
+        <label class="field-label">包间名称 <span style="color:var(--c-danger);">*</span></label>
+        <input type="text" class="input" id="addRoomNames" placeholder="如：贵宾A（多个用逗号或换行分隔）" maxlength="200" style="width:100%;">
+        <div style="font-size:0.75rem;color:var(--n-400);margin-top:var(--sp-1);">每行/逗号一个名称，可一次添加多个包间。留空则自动命名为「包间N」</div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('actionModal')">取消</button>
+      <button class="btn btn-primary" onclick="confirmAddRoom()">确认添加</button>
+    </div>
+  `;
+  overlay.classList.add('show');
+  setTimeout(() => document.getElementById('addRoomNames')?.focus(), 50);
+}
+
+// 确认添加包间
+function confirmAddRoom() {
+  if (!checkAuth()) { showToast('请先登录操作员', 'error'); return; }
+  const raw = (document.getElementById('addRoomNames').value || '').trim();
+
+  // 解析名称：按逗号/换行分隔，过滤空串
+  let names = raw
+    ? raw.split(/[,，\n\r、]+/).map(s => s.trim()).filter(Boolean)
+    : [];
+
+  // 留空 → 自动命名「包间N」
+  if (names.length === 0) {
+    const existing = Object.values(tables).filter(isRoom).length;
+    names = [`包间${existing + 1}`];
+  }
+
+  // 单次最多 50 个，避免误操作
+  if (names.length > 50) {
+    showToast('单次最多添加 50 个包间', 'error');
+    return;
+  }
+
+  // 名称去重（与现有包间名比较）
+  const existingNames = new Set(Object.values(tables).filter(isRoom).map(r => r.name));
+  let addedCount = 0;
+  for (const name of names) {
+    if (existingNames.has(name)) {
+      showToast(`包间「${name}」已存在，已跳过`, 'error');
+      continue;
+    }
+    const id = genRoomId();
+    tables[id] = createRoom(name);
+    existingNames.add(name);
+    addedCount++;
+  }
+
+  if (addedCount === 0) { showToast('没有新包间被添加', 'error'); return; }
+
+  saveTables(tables);
+  closeModal('actionModal');
+  renderAll();
+
+  showToast(`已添加 ${addedCount} 个包间`, 'success');
+
+  // 滚动到包间分区
+  setTimeout(() => {
+    document.getElementById('roomsSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 100);
+}
+
+// 重命名包间（弹窗内输入）
+function renameRoomPrompt(tableId, ev) {
+  if (ev) ev.stopPropagation(); // 阻止冒泡到卡片 onclick（开台）
+  if (!checkAuth()) { showToast('请先登录操作员', 'error'); return; }
+  const table = tables[tableId];
+  if (!table) return;
+  if (!isRoom(table)) { showToast('仅包间可重命名', 'error'); return; }
+
+  const modal = document.getElementById('actionModalContent');
+  const overlay = document.getElementById('actionModal');
+
+  modal.innerHTML = `
+    <div class="modal-title">✏️ 重命名包间</div>
+    <div class="modal-body">
+      <div class="field">
+        <label class="field-label">包间名称</label>
+        <input type="text" class="input" id="renameRoomInput" value="${esc(table.name)}" maxlength="20" style="width:100%;">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('actionModal')">取消</button>
+      <button class="btn btn-primary" onclick="confirmRenameRoom('${tableId}')">确认改名</button>
+    </div>
+  `;
+  overlay.classList.add('show');
+  setTimeout(() => {
+    const input = document.getElementById('renameRoomInput');
+    input?.focus();
+    input?.select();
+  }, 50);
+}
+
+// 确认重命名
+function confirmRenameRoom(tableId) {
+  if (!checkAuth()) { showToast('请先登录操作员', 'error'); return; }
+  const table = tables[tableId];
+  if (!table || !isRoom(table)) return;
+  const newName = (document.getElementById('renameRoomInput').value || '').trim();
+  if (!newName) { showToast('名称不能为空', 'error'); return; }
+
+  // 检查重名（排除自身）
+  const duplicate = Object.values(tables).some(r => isRoom(r) && r.id !== tableId && r.name === newName);
+  if (duplicate) { showToast(`包间「${newName}」已存在`, 'error'); return; }
+
+  const oldName = table.name;
+  table.name = newName;
+  saveTables(tables);
+  closeModal('actionModal');
+  renderAll();
+  showToast(`已改名：${oldName} → ${newName}`, 'success');
+}
+
+// 删除包间（仅空闲包间可删，带二次确认）
+function deleteRoomPrompt(tableId, ev) {
+  if (ev) ev.stopPropagation();
+  if (!checkAuth()) { showToast('请先登录操作员', 'error'); return; }
+  const table = tables[tableId];
+  if (!table || !isRoom(table)) return;
+  if (table.status !== 'idle') { showToast('使用中/已预约的包间无法删除', 'error'); return; }
+
+  showConfirm(
+    '删除包间？',
+    `确认删除包间「${esc(table.name)}」？该操作不可撤销。`,
+    () => {
+      delete tables[tableId];
+      saveTables(tables);
+      closeModal('actionModal');
+      renderAll();
+      showToast(`已删除包间「${table.name}」`, 'success');
+    }
+  );
+}
+
+// 渲染包间分区
+function renderRooms() {
+  const section = document.getElementById('roomsSection');
+  const grid = document.getElementById('roomsGrid');
+  const countEl = document.getElementById('roomsCount');
+  if (!section || !grid) return;
+
+  // 包间按名称排序（稳定展示顺序）
+  const rooms = Object.values(tables).filter(isRoom).sort((a, b) =>
+    a.name.localeCompare(b.name, 'zh')
+  );
+
+  if (rooms.length === 0) {
+    section.style.display = 'none';
+    return;
+  }
+  section.style.display = '';
+  if (countEl) countEl.textContent = `（${rooms.length}）`;
+
+  if (rooms.length === 0) {
+    grid.innerHTML = '';
+    return;
+  }
+  grid.innerHTML = rooms.map(r => renderRoomCard(r)).join('');
+}
+
 
 // ============================================
 // 渲染：筛选页网格
@@ -3128,6 +3495,22 @@ function renderFilterGrid() {
       } else {
         if (String(floorH) !== currentFilter.duration) return false;
       }
+    }
+
+    // 租品筛选（预约桌从 reservation 读租品，其余从 table 本身读）
+    if (currentFilter.rental && currentFilter.rental !== 'all') {
+      const isRes = t.status === 'reserved';
+      const sc = isRes ? (t.reservation && t.reservation.smartCard) : t.smartCard;
+      const bb = isRes ? (t.reservation && t.reservation.bigBoard) : t.bigBoard;
+      const sb = isRes ? (t.reservation && t.reservation.smallBoard) : t.smallBoard;
+      const hasSc = !!sc;
+      const hasBig = bb && bb !== 'none';
+      const hasSmall = sb && sb !== 'none';
+      const hasAny = hasSc || hasBig || hasSmall;
+      if (currentFilter.rental === 'smartcard' && !hasSc) return false;
+      if (currentFilter.rental === 'big' && !hasBig) return false;
+      if (currentFilter.rental === 'small' && !hasSmall) return false;
+      if (currentFilter.rental === 'none' && hasAny) return false;
     }
 
     return true;
@@ -3301,6 +3684,26 @@ function renderCharts() {
 // ============================================
 // 渲染：日志页
 // ============================================
+
+// 从开台日志构造租品标签串（如 ' · 📋智能卡板 · 🟦大板 · 🟧小板×1'）
+function rentalTagFromLog(log) {
+  const tags = [];
+  if (log.smartCard) tags.push('📋智能卡板');
+  if (log.bigBoard === 'one') tags.push('🟦大板×1');
+  else if (log.bigBoard === 'unlimited') tags.push('🟦大板');
+  if (log.smallBoard === 'one') tags.push('🟧小板×1');
+  else if (log.smallBoard === 'unlimited') tags.push('🟧小板');
+  return tags.length ? ' · ' + tags.join(' · ') : '';
+}
+// 从清桌日志构造归还标签串
+function rentalReturnedTagFromLog(log) {
+  const tags = [];
+  if (log.smartCardReturned) tags.push('📋卡板已归还');
+  if (log.bigBoardReturned) tags.push('🟦大板已归还');
+  if (log.smallBoardReturned) tags.push('🟧小板已归还');
+  return tags.length ? ' · ' + tags.join(' · ') : '';
+}
+
 function renderLogs() {
   // 填充操作员下拉
   const opSelect = document.getElementById('logOperator');
@@ -3355,12 +3758,12 @@ function renderLogs() {
 
     let desc = '';
     if (log.action === 'start') {
-      const scTag = log.smartCard ? ' · 📋智能卡板' : '';
+      const scTag = rentalTagFromLog(log);
       desc = `<strong>${esc(log.operator)}</strong> 开台 <strong>${esc(log.tableName)}</strong> · ${log.durationHours}小时${scTag}`;
     } else if (log.action === 'extend') {
       desc = `<strong>${esc(log.operator)}</strong> 续时 <strong>${esc(log.tableName)}</strong> · +${log.extendHours}小时`;
     } else if (log.action === 'clear') {
-      const scTag = log.smartCardReturned ? ' · 📋卡板已归还' : '';
+      const scTag = rentalReturnedTagFromLog(log);
       desc = `<strong>${esc(log.operator)}</strong> 清桌 <strong>${esc(log.tableName)}</strong>${scTag}`;
     } else if (log.action === 'modify') {
       desc = `<strong>${esc(log.operator)}</strong> 修改时间 <strong>${esc(log.tableName)}</strong> · ${formatDuration(log.oldDuration)} → ${formatDuration(log.newDuration)}`;
@@ -3403,21 +3806,35 @@ function exportLogs() {
   }
 
   // CSV 导出
-  let csv = '\uFEFF日期,时间,操作,桌台,操作员,详情,智能卡板\n';
+  let csv = '\uFEFF日期,时间,操作,桌台,操作员,详情,智能卡板,大板,小板\n';
   for (const log of allLogs) {
     const t = new Date(log.time);
     const time = t.toLocaleTimeString('zh-CN');
     const actionLabels = { start: '开台', extend: '续时', clear: '清桌', modify: '修改', reserve: '预约', cancel_reservation: '取消预约', reservation_to_session: '预约开台' };
     let detail = '';
-    let sc = '';
-    if (log.action === 'start') { detail = `${log.durationHours}小时`; sc = log.smartCard ? '租借' : ''; }
+    let sc = '', big = '', small = '';
+    if (log.action === 'start') {
+      detail = `${log.durationHours}小时`;
+      sc = log.smartCard ? '租借' : '';
+      big = log.bigBoard === 'one' ? '一张板' : (log.bigBoard === 'unlimited' ? '不限板' : '');
+      small = log.smallBoard === 'one' ? '一张板' : (log.smallBoard === 'unlimited' ? '不限板' : '');
+    }
     else if (log.action === 'extend') { detail = `+${log.extendHours}小时`; }
     else if (log.action === 'modify') { detail = `${formatDuration(log.oldDuration)}→${formatDuration(log.newDuration)}`; }
-    else if (log.action === 'clear') { sc = log.smartCardReturned ? '已归还' : ''; }
-    else if (log.action === 'reserve') { detail = `${log.customerName || ''} ${log.date || ''} ${log.mode === 'fullday' ? '全天' : (log.hours||0)+'小时'}`; }
+    else if (log.action === 'clear') {
+      sc = log.smartCardReturned ? '已归还' : '';
+      big = log.bigBoardReturned ? '已归还' : '';
+      small = log.smallBoardReturned ? '已归还' : '';
+    }
+    else if (log.action === 'reserve') {
+      detail = `${log.customerName || ''} ${log.date || ''} ${log.mode === 'fullday' ? '全天' : (log.hours||0)+'小时'}`;
+      sc = log.smartCard ? '租借' : '';
+      big = log.bigBoard === 'one' ? '一张板' : (log.bigBoard === 'unlimited' ? '不限板' : '');
+      small = log.smallBoard === 'one' ? '一张板' : (log.smallBoard === 'unlimited' ? '不限板' : '');
+    }
     else if (log.action === 'cancel_reservation') { detail = `${log.customerName || ''} ${log.date || ''}${log.autoExpired ? ' 过期自动取消' : ''}`; }
     else if (log.action === 'reservation_to_session') { detail = `${log.customerName || ''} 预约${log.date || ''}`; }
-    csv += `${log.date},${time},${actionLabels[log.action] || log.action},${log.tableName || ''},${log.operator || ''},${detail},${sc}\n`;
+    csv += `${log.date},${time},${actionLabels[log.action] || log.action},${log.tableName || ''},${log.operator || ''},${detail},${sc},${big},${small}\n`;
   }
 
   try {
@@ -3680,6 +4097,10 @@ function importData(event) {
                 extensions: Array.isArray(t.extensions) ? t.extensions : [],
                 sessionId: t.sessionId ? String(t.sessionId) : null,
                 isFullDay: (typeof t.isFullDay === 'boolean') ? t.isFullDay : false,
+                smartCard: (typeof t.smartCard === 'boolean') ? t.smartCard : false,
+                type: (t.type === 'room') ? 'room' : 'table',
+                bigBoard: (t.bigBoard === 'unlimited' || t.bigBoard === 'one') ? t.bigBoard : 'none',
+                smallBoard: (t.smallBoard === 'unlimited' || t.smallBoard === 'one') ? t.smallBoard : 'none',
                 reservation: (t.reservation && typeof t.reservation === 'object' && !Array.isArray(t.reservation)) ? t.reservation : null
               };
               // 时间一致性校验（全天桌台不需要 endTime）
@@ -3729,6 +4150,9 @@ function openReserveForm(tableId) {
   // 默认值：明天，全天模式
   window._reserveMode = 'fullday';
   window._reserveHours = 0;
+  // 租品默认：不租智能卡板，卡板「不租」（大板/小板合并一组，互斥）
+  window._reserveSc = false;
+  window._reserveBoardChoice = 'none';
 
   const today = new Date();
   const tomorrow = new Date(today.getTime() + 86400000);
@@ -3739,7 +4163,7 @@ function openReserveForm(tableId) {
   const defaultDate = fmt(tomorrow);
 
   modal.innerHTML = `
-    <div class="modal-title">预约 · ${esc(table.name)} 号桌</div>
+    <div class="modal-title">预约 · ${unitLabel(table)}</div>
     <div class="modal-body">
       <div style="display:flex;align-items:center;gap:var(--sp-2);margin-bottom:var(--sp-4);padding:var(--sp-2) var(--sp-3);background:var(--s-reserved-bg);border-radius:var(--r-md);">
         <div class="user-avatar" style="width:32px;height:32px;font-size:0.875rem;">${esc(getInitial(currentUser))}</div>
@@ -3781,6 +4205,30 @@ function openReserveForm(tableId) {
           </div>
         </div>
       </div>
+      <div class="field" style="margin-top:var(--sp-3);padding:var(--sp-3);background:var(--n-50);border-radius:var(--r-md);border:1px solid var(--n-200);">
+        <label class="field-label" style="margin-bottom:var(--sp-3);">租借租品（可选）</label>
+        <label style="display:flex;align-items:center;gap:var(--sp-3);cursor:pointer;margin-bottom:var(--sp-3);">
+          <div style="position:relative;width:44px;height:24px;flex-shrink:0;">
+            <input type="checkbox" id="reserveSmartCardToggle" style="position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;" onchange="toggleReserveSmartCardVisual(this)">
+            <div id="reserveSmartCardTrack" style="position:absolute;inset:0;background:var(--n-300);border-radius:var(--r-full);transition:background var(--dur-fast) var(--ease-out);"></div>
+            <div id="reserveSmartCardThumb" style="position:absolute;top:2px;left:2px;width:20px;height:20px;background:white;border-radius:var(--r-full);box-shadow:var(--sh-sm);transition:transform var(--dur-fast) var(--ease-out);"></div>
+          </div>
+          <div>
+            <div style="font-size:0.9375rem;font-weight:700;color:var(--n-700);">📋 智能卡板</div>
+            <div style="font-size:0.75rem;color:var(--n-500);">勾选表示预约含智能卡板租借</div>
+          </div>
+        </label>
+        <div class="rental-row" style="margin-top:var(--sp-2);">
+          <span class="rental-label">🎴 卡板</span>
+          <div class="rental-opts" data-kind="board">
+            <button class="dur-btn rental-opt selected" data-val="none" onclick="selectReserveCardBoard(this,'none')">不租</button>
+            <button class="dur-btn rental-opt" data-val="bigUnlimited" onclick="selectReserveCardBoard(this,'bigUnlimited')">大板不限</button>
+            <button class="dur-btn rental-opt" data-val="bigOne" onclick="selectReserveCardBoard(this,'bigOne')">大板一张</button>
+            <button class="dur-btn rental-opt" data-val="smallUnlimited" onclick="selectReserveCardBoard(this,'smallUnlimited')">小板不限</button>
+            <button class="dur-btn rental-opt" data-val="smallOne" onclick="selectReserveCardBoard(this,'smallOne')">小板一张</button>
+          </div>
+        </div>
+      </div>
       <div style="margin-top:var(--sp-4);padding:var(--sp-3);background:var(--c-primary-bg);border-radius:var(--r-md);font-size:0.8125rem;color:var(--n-600);line-height:1.6;">
         💡 预约按日期占用，预约日期过后未到店将自动取消。客户到店后点"到店开台"开始计时。
       </div>
@@ -3805,9 +4253,11 @@ function openActionModal(tableId) {
     // 开台 — 不预选任何按钮，小时默认0
     selectedDuration = 0;
     selectedFullDay = false;
+    // 租品默认：卡板「不租」（大板/小板合并为一组，互斥）
+    window._boardChoice = 'none';
 
     modal.innerHTML = `
-      <div class="modal-title">开台 · ${esc(table.name)} 号桌</div>
+      <div class="modal-title">开台 · ${unitLabel(table)}</div>
       <div class="modal-body">
         <div style="display:flex;align-items:center;gap:var(--sp-2);margin-bottom:var(--sp-4);padding:var(--sp-2) var(--sp-3);background:var(--c-primary-bg);border-radius:var(--r-md);">
           <div class="user-avatar" style="width:32px;height:32px;font-size:0.875rem;">${esc(getInitial(currentUser))}</div>
@@ -3852,6 +4302,18 @@ function openActionModal(tableId) {
             </div>
           </label>
         </div>
+        <div style="margin-top:var(--sp-3);">
+          <div class="rental-row">
+            <span class="rental-label">🎴 卡板</span>
+            <div class="rental-opts" data-kind="board">
+              <button class="dur-btn rental-opt selected" data-val="none" onclick="selectCardBoard(this,'none')">不租</button>
+              <button class="dur-btn rental-opt" data-val="bigUnlimited" onclick="selectCardBoard(this,'bigUnlimited')">大板不限</button>
+              <button class="dur-btn rental-opt" data-val="bigOne" onclick="selectCardBoard(this,'bigOne')">大板一张</button>
+              <button class="dur-btn rental-opt" data-val="smallUnlimited" onclick="selectCardBoard(this,'smallUnlimited')">小板不限</button>
+              <button class="dur-btn rental-opt" data-val="smallOne" onclick="selectCardBoard(this,'smallOne')">小板一张</button>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="modal-actions">
         <button class="btn btn-secondary" onclick="closeModal('actionModal')">取消</button>
@@ -3867,9 +4329,11 @@ function openActionModal(tableId) {
       ? `<a href="tel:${esc(r.phone)}" style="font-size:1rem;font-weight:700;color:var(--c-primary);text-decoration:none;">${esc(r.phone)}  📞</a>`
       : '<span style="font-size:1rem;color:var(--n-400);">未填写</span>';
     const createdStr = new Date(r.createdAt).toLocaleString('zh-CN', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+    // 预约租品汇总
+    const reserveRentalHtml = reservationRentalHtml(r);
 
     modal.innerHTML = `
-      <div class="modal-title">${esc(table.name)} 号桌</div>
+      <div class="modal-title">${unitLabel(table)}</div>
       <div class="modal-body">
         <div style="display:flex;align-items:center;gap:var(--sp-2);margin-bottom:var(--sp-3);padding:var(--sp-2) var(--sp-3);background:var(--s-reserved-bg);border-radius:var(--r-md);">
           <span style="font-size:0.875rem;color:var(--s-reserved);font-weight:700;">📅 已预约 · ${esc(formatDateLabel(r.date))}</span>
@@ -3900,6 +4364,7 @@ function openActionModal(tableId) {
             <div style="font-size:0.875rem;color:var(--n-600);">${createdStr}</div>
           </div>
         </div>
+        ${reserveRentalHtml}
         <div style="padding:var(--sp-3);background:var(--c-primary-bg);border-radius:var(--r-md);font-size:0.8125rem;color:var(--n-600);line-height:1.6;">
           💡 客户到店后点"到店开台"开始计时。预约日期过后未到店将自动取消。
         </div>
@@ -3915,13 +4380,9 @@ function openActionModal(tableId) {
 
     // 全天桌台：简化弹窗，只显示信息和清桌
     if (table.isFullDay) {
-      const scInfo = table.smartCard ? `
-        <div style="margin-top:var(--sp-2);">
-          <div style="font-size:0.75rem;color:var(--n-400);">智能卡板</div>
-          <div style="font-size:1rem;font-weight:700;color:oklch(40% 0.12 145);">📋 已租借（使用中）</div>
-        </div>` : '';
+      const rentalInfo = rentalInfoHtml(table);
       modal.innerHTML = `
-        <div class="modal-title">${esc(table.name)} 号桌</div>
+        <div class="modal-title">${unitLabel(table)}</div>
         <div class="modal-body">
           <div style="display:flex;align-items:center;gap:var(--sp-2);margin-bottom:var(--sp-3);">
             <span style="font-size:0.875rem;color:var(--s-active);font-weight:700;">● 全天使用中</span>
@@ -3939,10 +4400,10 @@ function openActionModal(tableId) {
               <div style="font-size:0.75rem;color:var(--n-400);">操作员</div>
               <div style="font-size:1.125rem;font-weight:700;">${esc(table.operator)}</div>
             </div>
-            ${scInfo}
+            ${rentalInfo}
           </div>
           <div style="padding:var(--sp-3);background:var(--c-primary-bg);border-radius:var(--r-md);font-size:0.8125rem;color:var(--n-600);line-height:1.6;">
-            💡 全天模式不限时，顾客用完后点"清桌"结束即可。${table.smartCard ? '清桌前需确认智能卡板已归还。' : ''}
+            💡 全天模式不限时，顾客用完后点"清桌"结束即可。${hasRentals(table).length ? '清桌前需确认租品（卡板/大板/小板）已归还。' : ''}
           </div>
         </div>
         <div class="modal-actions" style="flex-direction:column;gap:var(--sp-2);">
@@ -3970,14 +4431,10 @@ function openActionModal(tableId) {
       overtime: { text: '超时 10 分钟+！请立即处理', color: 'var(--s-overtime)' },
     };
 
-    const scInfoHtml = table.smartCard ? `
-      <div style="margin-top:var(--sp-2);">
-        <div style="font-size:0.75rem;color:var(--n-400);">智能卡板</div>
-        <div style="font-size:1.0625rem;font-weight:700;color:oklch(40% 0.12 145);">📋 已租借（使用中）</div>
-      </div>` : '';
+    const scInfoHtml = rentalInfoHtml(table);
 
     modal.innerHTML = `
-      <div class="modal-title">${esc(table.name)} 号桌</div>
+      <div class="modal-title">${unitLabel(table)}</div>
       <div class="modal-body" style="padding-bottom:0;">
         <div style="display:flex;align-items:center;gap:var(--sp-2);margin-bottom:var(--sp-3);">
           <span style="font-size:0.875rem;color:${stateInfo[state].color};font-weight:700;">● ${stateInfo[state].text}</span>
@@ -4025,7 +4482,7 @@ function openActionModal(tableId) {
       <div class="modal-actions" style="flex-direction:column;gap:var(--sp-2);margin-top:0;border-top:1px solid var(--n-100);padding-top:var(--sp-3);">
         <button class="btn btn-primary btn-lg" onclick="extendSession('${tableId}')">确认续时</button>
         <button class="btn btn-secondary" style="width:100%;" onclick="showModifyTime('${tableId}')">修改时间</button>
-        <button class="btn btn-danger" style="width:100%;" onclick="clearTableConfirm('${tableId}')">清桌（结束使用）${table.smartCard ? ' · 需确认卡板归还' : ''}</button>
+        <button class="btn btn-danger" style="width:100%;" onclick="clearTableConfirm('${tableId}')">清桌（结束使用）${hasRentals(table).length ? ' · 需确认租品归还' : ''}</button>
       </div>
     `;
 
@@ -4054,7 +4511,7 @@ function showModifyTime(tableId) {
   const curMins = Math.round((table.durationHours - curHours) * 60);
 
   modal.innerHTML = `
-    <div class="modal-title">修改时间 · ${esc(table.name)} 号桌</div>
+    <div class="modal-title">修改时间 · ${unitLabel(table)}</div>
     <div class="modal-body">
       <div style="padding:var(--sp-3);background:var(--n-50);border-radius:var(--r-md);margin-bottom:var(--sp-4);font-size:0.8125rem;color:var(--n-600);line-height:1.6;">
         <div style="display:flex;justify-content:space-between;margin-bottom:var(--sp-1);">
@@ -4160,7 +4617,7 @@ function modifyTime(tableId) {
   closeModal('actionModal');
   renderAll();
   const label = m > 0 ? `${h}小时${m}分` : `${h}小时`;
-  showToast(`${table.name} 号桌时长已修改为 ${label}`, 'success');
+  showToast(`${unitText(table)}时长已修改为 ${label}`, 'success');
 }
 
 function selectDur(btn, hours) {
@@ -4196,6 +4653,35 @@ function toggleSmartCardVisual(checkbox) {
     track.style.background = 'var(--n-300)';
     thumb.style.transform = 'translateX(0)';
   }
+}
+
+// 卡板单选（大板/小板合并为一组，互斥）
+// choice: 'none' | 'bigUnlimited' | 'bigOne' | 'smallUnlimited' | 'smallOne'
+function selectCardBoard(btn, choice) {
+  btn.parentElement.querySelectorAll('.dur-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  window._boardChoice = choice;
+}
+
+// 预约弹窗：智能卡板开关视觉（独立 id，避免与开台弹窗冲突）
+function toggleReserveSmartCardVisual(checkbox) {
+  const track = document.getElementById('reserveSmartCardTrack');
+  const thumb = document.getElementById('reserveSmartCardThumb');
+  window._reserveSc = checkbox.checked;
+  if (checkbox.checked) {
+    track.style.background = 'oklch(55% 0.15 145)';
+    thumb.style.transform = 'translateX(20px)';
+  } else {
+    track.style.background = 'var(--n-300)';
+    thumb.style.transform = 'translateX(0)';
+  }
+}
+
+// 预约弹窗：卡板单选（与开台共用逻辑，存到 _reserveBoardChoice）
+function selectReserveCardBoard(btn, choice) {
+  btn.parentElement.querySelectorAll('.dur-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  window._reserveBoardChoice = choice;
 }
 
 function selectExtendDur(btn, hours) {
@@ -4287,6 +4773,10 @@ function startSession(tableId) {
   // 读取智能卡板开关
   const scToggle = document.getElementById('smartCardToggle');
   table.smartCard = scToggle ? scToggle.checked : false;
+  // 读取卡板选择（大板/小板互斥，拆分回 bigBoard/smallBoard）
+  const choice = window._boardChoice || 'none';
+  table.bigBoard = (choice === 'bigUnlimited') ? 'unlimited' : (choice === 'bigOne' ? 'one' : 'none');
+  table.smallBoard = (choice === 'smallUnlimited') ? 'unlimited' : (choice === 'smallOne' ? 'one' : 'none');
 
   if (selectedFullDay) {
     // 全天模式：不设 endTime，标记 isFullDay
@@ -4340,14 +4830,23 @@ function startSession(tableId) {
     operator: currentUser,
     durationHours: selectedFullDay ? 0 : table.durationHours,
     isFullDay: selectedFullDay,
-    smartCard: table.smartCard
+    smartCard: table.smartCard,
+    bigBoard: table.bigBoard,
+    smallBoard: table.smallBoard
   });
 
   closeModal('actionModal');
   renderAll();
   const timeLabel = selectedFullDay ? '全天' : `${selectedDuration}小时`;
-  const scLabel = table.smartCard ? ' · 智能卡板' : '';
-  showToast(`${table.name} 号桌已开台 · ${timeLabel}${scLabel}`, 'success');
+  // 租品标签汇总（智能卡板 + 大板 + 小板）
+  const rentalLabels = [];
+  if (table.smartCard) rentalLabels.push('智能卡板');
+  if (table.bigBoard === 'one') rentalLabels.push('大板×1');
+  else if (table.bigBoard === 'unlimited') rentalLabels.push('大板');
+  if (table.smallBoard === 'one') rentalLabels.push('小板×1');
+  else if (table.smallBoard === 'unlimited') rentalLabels.push('小板');
+  const scLabel = rentalLabels.length ? ' · ' + rentalLabels.join('、') : '';
+  showToast(`${unitText(table)}已开台 · ${timeLabel}${scLabel}`, 'success');
 }
 
 function extendSession(tableId) {
@@ -4397,7 +4896,7 @@ function extendSession(tableId) {
 
   closeModal('actionModal');
   renderAll();
-  showToast(`${table.name} 号桌续时 ${hours} 小时`, 'success');
+  showToast(`${unitText(table)}续时 ${hours} 小时`, 'success');
 }
 
 function clearTableConfirm(tableId) {
@@ -4405,42 +4904,100 @@ function clearTableConfirm(tableId) {
   const table = tables[tableId];
   if (!table) { showToast('桌台不存在', 'error'); return; }
 
-  // 如果使用了智能卡板，需要先确认是否已归还
-  if (table.smartCard) {
-    showSmartCardReturnConfirm(tableId);
+  // 如果租借了任何租品（智能卡板/大板/小板），需先确认归还
+  if (hasRentals(table).length > 0) {
+    showRentalReturnConfirm(tableId);
     return;
   }
 
-  // 直接清桌（无智能卡板，或已确认归还）
+  // 直接清桌（无租品，或已确认归还）
   doClearTable(tableId);
 }
 
-// 智能卡板归还确认弹窗
-function showSmartCardReturnConfirm(tableId) {
+// 汇总桌台租借的租品，返回描述数组（用于归还确认与日志）
+// 返回如 ['📋 智能卡板', '🟦 大板（不限板）', '🟧 小板×1']；无租品返回 []
+function rentalList(table) {
+  const list = [];
+  if (!table) return list;
+  if (table.smartCard) list.push({ key: 'smartCard', icon: '📋', name: '智能卡板', sub: '' });
+  if (table.bigBoard === 'one') list.push({ key: 'bigBoard', icon: '🟦', name: '大板', sub: '一张板' });
+  else if (table.bigBoard === 'unlimited') list.push({ key: 'bigBoard', icon: '🟦', name: '大板', sub: '不限板' });
+  if (table.smallBoard === 'one') list.push({ key: 'smallBoard', icon: '🟧', name: '小板', sub: '一张板' });
+  else if (table.smallBoard === 'unlimited') list.push({ key: 'smallBoard', icon: '🟧', name: '小板', sub: '不限板' });
+  return list;
+}
+// 是否有租品（快捷判断）
+function hasRentals(table) { return rentalList(table); }
+
+// 详情页租品信息块（开台/全天/续时弹窗共用）：无租品返回空串
+function rentalInfoHtml(table) {
+  const items = rentalList(table);
+  if (items.length === 0) return '';
+  return `
+    <div style="margin-top:var(--sp-2);">
+      <div style="font-size:0.75rem;color:var(--n-400);">租借租品</div>
+      <div style="font-size:1.0625rem;font-weight:700;color:oklch(40% 0.12 145);line-height:1.5;">
+        ${items.map(it => `${it.icon} ${esc(it.name)}${it.sub ? `<span style="font-size:0.8125rem;color:var(--n-500);font-weight:400;">（${esc(it.sub)}）</span>` : ''}`).join('、')}
+      </div>
+    </div>`;
+}
+
+// 预约详情租品信息块（从 reservation 对象读取）：无租品返回空串
+function reservationRentalHtml(r) {
+  if (!r) return '';
+  const items = [];
+  if (r.smartCard) items.push({ icon: '📋', name: '智能卡板', sub: '' });
+  if (r.bigBoard === 'one') items.push({ icon: '🟦', name: '大板', sub: '一张板' });
+  else if (r.bigBoard === 'unlimited') items.push({ icon: '🟦', name: '大板', sub: '不限板' });
+  if (r.smallBoard === 'one') items.push({ icon: '🟧', name: '小板', sub: '一张板' });
+  else if (r.smallBoard === 'unlimited') items.push({ icon: '🟧', name: '小板', sub: '不限板' });
+  if (items.length === 0) return '';
+  return `
+    <div style="margin-bottom:var(--sp-3);padding:var(--sp-3);background:var(--n-50);border-radius:var(--r-md);">
+      <div style="font-size:0.75rem;color:var(--n-400);margin-bottom:var(--sp-1);">预约租品</div>
+      <div style="font-size:1rem;font-weight:700;color:oklch(40% 0.12 145);line-height:1.5;">
+        ${items.map(it => `${it.icon} ${esc(it.name)}${it.sub ? `<span style="font-size:0.75rem;color:var(--n-500);font-weight:400;">（${esc(it.sub)}）</span>` : ''}`).join('、')}
+      </div>
+    </div>`;
+}
+
+// 租品归还确认弹窗（智能卡板 + 大板/小板 通用）
+function showRentalReturnConfirm(tableId) {
   const table = tables[tableId];
   if (!table) return;
+  const items = rentalList(table);
+  if (items.length === 0) { doClearTable(tableId); return; }
+
   const modal = document.getElementById('actionModalContent');
   const overlay = document.getElementById('actionModal');
 
+  const itemListHtml = items.map(it =>
+    `<div style="display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-3);background:var(--n-50);border-radius:var(--r-md);">
+      <span style="font-size:1.25rem;">${it.icon}</span>
+      <strong style="color:var(--n-800);">${esc(it.name)}</strong>
+      ${it.sub ? `<span style="font-size:0.75rem;color:var(--n-500);">（${esc(it.sub)}）</span>` : ''}
+    </div>`
+  ).join('');
+
   modal.innerHTML = `
-    <div class="modal-title">智能卡板归还确认</div>
+    <div class="modal-title">租品归还确认</div>
     <div class="modal-body">
       <div style="display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-4);background:oklch(55% 0.15 145 / 0.08);border-radius:var(--r-md);margin-bottom:var(--sp-3);">
-        <div style="font-size:2rem;">📋</div>
+        <div style="font-size:2rem;">📦</div>
         <div>
-          <div style="font-size:1rem;font-weight:700;color:var(--n-800);">${esc(table.name)} 号桌 · 智能卡板</div>
-          <div style="font-size:0.8125rem;color:var(--n-500);">该桌台开台时租借了智能卡板</div>
+          <div style="font-size:1rem;font-weight:700;color:var(--n-800);">${unitLabel(table)} · 待归还租品</div>
+          <div style="font-size:0.8125rem;color:var(--n-500);">共 ${items.length} 项租品</div>
         </div>
       </div>
-      <div style="padding:var(--sp-3);background:var(--s-warn-bg);border-radius:var(--r-md);font-size:0.875rem;color:oklch(35% 0.10 75);line-height:1.6;margin-bottom:var(--sp-3);">
-        ⚠️ 请确认智能卡板已归还，归还后方可清桌。
+      <div style="display:flex;flex-direction:column;gap:var(--sp-2);margin-bottom:var(--sp-3);">
+        ${itemListHtml}
       </div>
-      <div style="font-size:0.8125rem;color:var(--n-500);text-align:center;">
-        智能卡板是否已归还？
+      <div style="padding:var(--sp-3);background:var(--s-warn-bg);border-radius:var(--r-md);font-size:0.875rem;color:oklch(35% 0.10 75);line-height:1.6;margin-bottom:var(--sp-3);">
+        ⚠️ 请确认以上租品均已归还，归还后方可清桌。
       </div>
     </div>
     <div class="modal-actions" style="flex-direction:column;gap:var(--sp-2);">
-      <button class="btn btn-primary btn-lg" onclick="confirmSmartCardReturned('${tableId}')">✅ 已归还，确认清桌</button>
+      <button class="btn btn-primary btn-lg" onclick="confirmRentalsReturned('${tableId}')">✅ 全部已归还，确认清桌</button>
       <button class="btn btn-secondary" style="width:100%;" onclick="closeModal('actionModal')">❌ 未归还，返回</button>
     </div>
   `;
@@ -4448,17 +5005,18 @@ function showSmartCardReturnConfirm(tableId) {
   overlay.classList.add('show');
 }
 
-// 确认智能卡板已归还 → 执行清桌
-function confirmSmartCardReturned(tableId) {
+// 确认租品已归还 → 执行清桌
+function confirmRentalsReturned(tableId) {
   const table = tables[tableId];
   if (!table) return;
-  table.smartCard = false; // 标记已归还
   addLog('clear', {
     tableId,
     tableName: table.name,
     operator: currentUser,
     durationHours: table.durationHours,
-    smartCardReturned: true
+    smartCardReturned: table.smartCard ? true : null,
+    bigBoardReturned: table.bigBoard !== 'none' ? table.bigBoard : null,
+    smallBoardReturned: table.smallBoard !== 'none' ? table.smallBoard : null
   });
   doClearTable(tableId, true);
 }
@@ -4468,14 +5026,16 @@ function doClearTable(tableId, smartCardReturned) {
   const table = tables[tableId];
   if (!table) { showToast('桌台不存在', 'error'); return; }
 
-  // 如果没有经过智能卡板归还确认（即无智能卡板的情况），记录日志
+  // 如果没有经过租品归还确认（即无租品的情况），记录日志
   if (!smartCardReturned) {
     addLog('clear', {
       tableId,
       tableName: table.name,
       operator: currentUser,
       durationHours: table.durationHours,
-      smartCardReturned: table.smartCard ? true : null
+      smartCardReturned: table.smartCard ? true : null,
+      bigBoardReturned: table.bigBoard !== 'none' ? table.bigBoard : null,
+      smallBoardReturned: table.smallBoard !== 'none' ? table.smallBoard : null
     });
   }
 
@@ -4488,12 +5048,14 @@ function doClearTable(tableId, smartCardReturned) {
   table.sessionId = null;
   table.isFullDay = false;
   table.smartCard = false;
+  table.bigBoard = 'none';
+  table.smallBoard = 'none';
   table.reservation = null;
 
   saveTables(tables);
   closeModal('actionModal');
   renderAll();
-  showToast(`${table.name} 号桌已清桌`, 'success');
+  showToast(`${unitText(table)}已清桌`, 'success');
 }
 
 // ============================================
@@ -4515,6 +5077,12 @@ function createReservation(tableId) {
   const date = document.getElementById('reserveDate').value;
   const mode = window._reserveMode || 'fullday';   // 'fullday' | 'hours'
   const hours = mode === 'hours' ? (window._reserveHours || 0) : 0;
+  // 读取租品
+  const smartCard = !!window._reserveSc;
+  // 卡板单选拆分回 bigBoard/smallBoard（互斥）
+  const choice = window._reserveBoardChoice || 'none';
+  const bigBoard = (choice === 'bigUnlimited') ? 'unlimited' : (choice === 'bigOne' ? 'one' : 'none');
+  const smallBoard = (choice === 'smallUnlimited') ? 'unlimited' : (choice === 'smallOne' ? 'one' : 'none');
 
   if (!customerName) { showToast('请填写客户姓名', 'error'); return; }
   if (!date) { showToast('请选择预约日期', 'error'); return; }
@@ -4530,7 +5098,10 @@ function createReservation(tableId) {
     mode,
     hours,
     operator: currentUser,
-    createdAt: now.toISOString()
+    createdAt: now.toISOString(),
+    smartCard,
+    bigBoard,
+    smallBoard
   };
 
   saveTables(tables);
@@ -4543,7 +5114,10 @@ function createReservation(tableId) {
     phone,
     date,
     mode,
-    hours
+    hours,
+    smartCard,
+    bigBoard,
+    smallBoard
   });
 
   closeModal('actionModal');
@@ -4551,7 +5125,7 @@ function createReservation(tableId) {
 
   const dateLabel = formatDateLabel(date);
   const modeLabel = mode === 'fullday' ? '全天' : `${hours}小时`;
-  showToast(`${table.name} 号桌已预约 · ${customerName} · ${dateLabel} ${modeLabel}`, 'success');
+  showToast(`${unitText(table)}已预约 · ${customerName} · ${dateLabel} ${modeLabel}`, 'success');
 }
 
 // 预约到店 → 转开台
@@ -4581,7 +5155,10 @@ function reservationToSession(tableId) {
   table.operator = currentUser;
   table.extensions = [];
   table.sessionId = 'S' + now.getTime();
-  table.smartCard = false;
+  // 继承预约时选择的租品（卡板/大板/小板）
+  table.smartCard = !!r.smartCard;
+  table.bigBoard = r.bigBoard || 'none';
+  table.smallBoard = r.smallBoard || 'none';
 
   if (r.mode === 'fullday') {
     table.isFullDay = true;
@@ -4607,6 +5184,8 @@ function reservationToSession(tableId) {
     durationHours: table.durationHours,
     isFullDay: table.isFullDay,
     smartCard: table.smartCard,
+    bigBoard: table.bigBoard,
+    smallBoard: table.smallBoard,
     ...reserveInfo
   });
 
@@ -4614,7 +5193,7 @@ function reservationToSession(tableId) {
   renderAll();
 
   const timeLabel = table.isFullDay ? '全天' : `${table.durationHours}小时`;
-  showToast(`${table.name} 号桌已开台（预约:${r.customerName}）· ${timeLabel}`, 'success');
+  showToast(`${unitText(table)}已开台（预约:${r.customerName}）· ${timeLabel}`, 'success');
 }
 
 // 取消预约 — 入口（带二次确认，仿 clearTableConfirm）
@@ -4642,7 +5221,7 @@ function showCancelReservationConfirm(tableId) {
       <div style="display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-4);background:var(--s-expired-bg);border-radius:var(--r-md);margin-bottom:var(--sp-3);">
         <div style="font-size:2rem;">📅</div>
         <div>
-          <div style="font-size:1rem;font-weight:700;color:var(--n-800);">${esc(table.name)} 号桌</div>
+          <div style="font-size:1rem;font-weight:700;color:var(--n-800);">${unitLabel(table)}</div>
           <div style="font-size:0.8125rem;color:var(--n-500);">${esc(r.customerName)}${r.phone ? ' · ' + esc(r.phone) : ''} · ${esc(formatDateLabel(r.date))}</div>
         </div>
       </div>
@@ -4688,9 +5267,9 @@ function doCancelReservation(tableId, autoExpired) {
   renderAll();
 
   if (autoExpired === true) {
-    showToast(`${table.name} 号桌预约已过期自动取消`, '');
+    showToast(`${unitText(table)}预约已过期自动取消`, '');
   } else {
-    showToast(`${table.name} 号桌预约已取消`, 'success');
+    showToast(`${unitText(table)}预约已取消`, 'success');
   }
 }
 
@@ -4854,6 +5433,7 @@ function switchPage(pageName) {
 // ============================================
 function renderAll() {
   renderStats();
+  renderRooms();
   renderTables();
   const activePage = document.querySelector('.nav-item.active').dataset.page;
   if (activePage === 'filter') renderFilterGrid();
@@ -4927,16 +5507,14 @@ setInterval(() => {
   if (activePage === 'tables' || activePage === 'filter') {
     // 只更新剩余时间文字，不重建整个 DOM（避免点击丢失和闪烁）
     const grid = activePage === 'tables' ? document.getElementById('tableGrid') : document.getElementById('filterGrid');
-    const cards = grid.querySelectorAll('.tcard');
+    const cards = grid.querySelectorAll('.flip');
     const statusLabels = {
       idle: '空闲', active: '使用中', warn: '即将到期',
       expired: '已到期', overtime: '超时', reserved: '已预约'
     };
     cards.forEach(card => {
-      const onclickAttr = card.getAttribute('onclick');
-      const match = onclickAttr && onclickAttr.match(/'([^']+)'/);
-      if (!match) return;
-      const tableId = match[1];
+      const tableId = card.dataset.tid;
+      if (!tableId) return;
       const table = tables[tableId];
       if (!table || table.status === 'idle') return;
       // 预约桌和全天桌台不需要每秒倒计时
@@ -4944,22 +5522,20 @@ setInterval(() => {
       if (table.status === 'reserved') return;
 
       const newState = getTableState(table);
-      const oldClass = card.className;
 
       // 状态变化时只更新该卡片的 class 和状态文字，不重建整个 DOM
       const stateClasses = ['idle','active','warn','expired','overtime','reserved'];
-      const oldState = stateClasses.find(s => oldClass.includes(s));
+      const oldState = stateClasses.find(s => card.classList.contains(s));
       if (oldState !== newState) {
         // 移除旧状态 class，添加新状态 class
         card.classList.remove(oldState);
         card.classList.add(newState);
-        // 更新状态标签文字
-        const statusEl = card.querySelector('.tcard-status');
-        if (statusEl) statusEl.textContent = statusLabels[newState];
+        // 更新状态标签文字（正反面都有状态标签）
+        card.querySelectorAll('.f-state, .b-state-tag').forEach(el => { el.textContent = statusLabels[newState]; });
       }
 
-      // 只更新时间文字
-      const remainEl = card.querySelector('.tcard-remain');
+      // 只更新时间文字（正面 .f-remain）
+      const remainEl = card.querySelector('.f-remain');
       if (remainEl) {
         const newTime = getRemainingTime(table);
         if (remainEl.textContent !== newTime) {
